@@ -2196,7 +2196,7 @@ bool ChatHandler::HandlePInfoCommand(const char* args)
     std::string last_login = GetMangosString(LANG_ERROR);
 
     //QueryResult* result = LoginDatabase.PQuery("SELECT username,gmlevel,last_ip,last_login FROM account WHERE id = '%u'",accId);
-	QueryResult* result = loginDatabase.PQuery("SELECT a.username, a.gmlevel, a.last_ip, a.last_login, a_fp.accountid, a_fp.security, a_fp.realmid FROM account AS a LEFT JOIN account_forcepermission AS a_fp on a.id = a_fp.accountid WHERE a.id = '%u' ORDER BY FIELD(a_fp.realmid,'%u') DESC", accId, realmID);
+	QueryResult* result = LoginDatabase.PQuery("SELECT a.username, a.gmlevel, a.last_ip, a.last_login, a_fp.accountid, a_fp.security, a_fp.realmid FROM account AS a LEFT JOIN account_forcepermission AS a_fp on a.id = a_fp.accountid WHERE a.id = '%u' ORDER BY FIELD(a_fp.realmid,'%u') DESC", accId, realmID);
     if (result)
     {
         Field* fields = result->Fetch();
