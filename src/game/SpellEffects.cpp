@@ -672,6 +672,11 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                 {
                     damage += int32(m_caster->GetTotalAttackPowerValue(RANGED_ATTACK)*0.1f);
                 }
+				// Black Arrow
+				else if (m_spellProto->SpellFamilyFlags & UI64LIT(0x0800000000000080))
+				{
+					damage += int32(m_caster->GetTotalAttackPowerValue(RANGED_ATTACK)*0.1f);
+				}
                 // Volley
                 else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x00002000))
                 {
@@ -2724,6 +2729,11 @@ void Spell::EffectTriggerSpell(SpellEffectIndex effIndex)
         // so this just for speedup places in else
         caster = IsSpellWithCasterSourceTargetsOnly(spellInfo) ? unitTarget : m_caster;
     }
+
+	// Freezing Arrow and some other spells
+    if (m_caster->GetTypeId() == TYPEID_PLAYER && m_spellInfo->CategoryRecoveryTime && spellInfo->CategoryRecoveryTime
+        && m_spellInfo->Category == spellInfo->Category)
+        ((Player*)m_caster)->RemoveSpellCooldown(spellInfo->Id);
 
     caster->CastSpell(unitTarget,spellInfo,true,NULL,NULL,m_originalCasterGUID);
 }
