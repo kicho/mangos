@@ -389,6 +389,10 @@ class ChatHandler
         bool HandleReloadQuestPOICommand(const char* args);
         bool HandleReloadQuestStartScriptsCommand(const char* args);
         bool HandleReloadQuestTemplateCommand(const char* args);
+		bool HandleReloadCreatureTemplateCommand(const char* args);
+		bool HandleReloadItemTemplateCommand(const char* args);
+		bool HandleReloadGameobjectTemplateCommand(const char* args);
+		bool HandleReloadCreatureAddonsCommand(const char* args);
         bool HandleReloadReservedNameCommand(const char*);
         bool HandleReloadSkillDiscoveryTemplateCommand(const char* args);
         bool HandleReloadSkillExtraItemTemplateCommand(const char* args);
@@ -407,7 +411,7 @@ class ChatHandler
         bool HandleReloadSpellPetAurasCommand(const char* args);
 
         bool HandleResetAchievementsCommand(const char * args);
-        bool HandleResetAllCommand(const char * args);
+        //bool HandleResetAllCommand(const char * args); //disabled for security reasons
         bool HandleResetHonorCommand(const char * args);
         bool HandleResetLevelCommand(const char * args);
         bool HandleResetSpecsCommand(const char * args);
