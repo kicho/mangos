@@ -2765,6 +2765,7 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
     switch(form)
     {
         case FORM_CAT:
+		case FORM_SHADOW_DANCE:
             PowerType = POWER_ENERGY;
             break;
         case FORM_BEAR:
@@ -2831,7 +2832,8 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
         if(target->m_ShapeShiftFormSpellId)
             target->RemoveAurasDueToSpell(target->m_ShapeShiftFormSpellId, GetHolder());
 
-        target->SetByteValue(UNIT_FIELD_BYTES_2, 3, form);
+        // Shadow Dance form 30 not 13
+		target->SetByteValue(UNIT_FIELD_BYTES_2, 3, (form == FORM_SHADOW_DANCE) ? uint8(FORM_STEALTH) : form);
 
         if(modelid > 0)
             target->SetDisplayId(modelid);
@@ -2900,8 +2902,12 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
                         target->SetPower(POWER_RAGE, Rage_val);
                     break;
                 }
-                default:
-                    break;
+				// Shadow Dance
+				case FORM_SHADOW_DANCE:
+					target->SetStandFlags(UNIT_STAND_FLAGS_CREEP);
+					break;
+				default:
+					break;
             }
         }
 
@@ -2940,6 +2946,10 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
                 if(Aura* dummy = target->GetDummyAura(37324) )
                     target->CastSpell(target, 37325, true, NULL, dummy);
                 break;
+				// Shadow Dance
+			case FORM_SHADOW_DANCE:
+				target->RemoveStandFlags(UNIT_STAND_FLAGS_CREEP);
+                break;
             default:
                 break;
         }
@@ -2955,6 +2965,8 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
     // adding/removing linked auras
     // add/remove the shapeshift aura's boosts
     HandleShapeshiftBoosts(apply);
+
+	target->UpdateSpeed(MOVE_RUN, true);
 
     if(target->GetTypeId() == TYPEID_PLAYER)
         ((Player*)target)->InitDataForForm();
@@ -5183,6 +5195,7 @@ void Aura::HandleAuraModIncreaseHealth(bool apply, bool Real)
         case 34511:                                         // Valor (Bulwark of Kings, Bulwark of the Ancient Kings)
         case 44055: case 55915: case 55917: case 67596:     // Tremendous Fortitude (Battlemaster's Alacrity)
         case 50322:                                         // Survival Instincts
+		case 53479:                                         // Hunter pet - Last Stand
         case 54443:                                         // Demonic Empowerment (Voidwalker)
         case 55233:                                         // Vampiric Blood
         case 59465:                                         // Brood Rage (Ahn'Kahet)
