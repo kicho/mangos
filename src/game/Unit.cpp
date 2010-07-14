@@ -5678,8 +5678,11 @@ Pet* Unit::GetPet() const
 {
     if(uint64 pet_guid = GetPetGUID())
     {
+		if(IsInWorld())
+		{
         if(Pet* pet = GetMap()->GetPet(pet_guid))
             return pet;
+		}
 
         sLog.outError("Unit::GetPet: Pet %u not exist.",GUID_LOPART(pet_guid));
         const_cast<Unit*>(this)->SetPet(0);
@@ -8248,9 +8251,19 @@ float Unit::ApplyTotalThreatModifier(float threat, SpellSchoolMask schoolMask)
 
 void Unit::AddThreat(Unit* pVictim, float threat /*= 0.0f*/, bool crit /*= false*/, SpellSchoolMask schoolMask /*= SPELL_SCHOOL_MASK_NONE*/, SpellEntry const *threatSpell /*= NULL*/)
 {
-    // Only mobs can manage threat lists
-    if(CanHaveThreatList())
-        m_ThreatManager.addThreat(pVictim, threat, crit, schoolMask, threatSpell);
+	/* check SD2 (prevents crash from bad scripts) */
+
+	// if no victim
+	if(!pVictim)
+		return;
+
+	// if victim is dead
+	if(!pVictim->isAlive())
+		return;
+
+	// Only mobs can manage threat lists
+	if(CanHaveThreatList())
+		m_ThreatManager.addThreat(pVictim, threat, crit, schoolMask, threatSpell);
 }
 
 //======================================================================

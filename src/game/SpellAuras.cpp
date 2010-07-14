@@ -5999,6 +5999,9 @@ void Aura::HandleAuraAllowFlight(bool apply, bool Real)
     if(!Real)
         return;
 
+	if (!m_target || m_target->GetTypeId() != TYPEID_PLAYER)
+		return; 
+
     // allow fly
     WorldPacket data;
     if(apply)

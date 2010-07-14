@@ -220,6 +220,9 @@ void ThreatContainer::clearReferences()
 // Return the HostileReference of NULL, if not found
 HostileReference* ThreatContainer::getReferenceByTarget(Unit* pVictim)
 {
+	if(!pVictim)
+		return NULL;
+
     HostileReference* result = NULL;
     uint64 guid = pVictim->GetGUID();
     for(ThreatList::const_iterator i = iThreatList.begin(); i != iThreatList.end(); ++i)
