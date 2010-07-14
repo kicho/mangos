@@ -42,6 +42,7 @@
 #include "WorldSocketMgr.h"
 #include "Log.h"
 #include "DBCStores.h"
+#include "Config/Config.h"
 
 #if defined( __GNUC__ )
 #pragma pack(1)
@@ -755,6 +756,7 @@ int WorldSocket::HandleAuthSession (WorldPacket& recvPacket)
     WorldPacket packet, SendAddonPacked;
 
     BigNumber K;
+	uint32 realmID = sConfig.GetIntDefault("RealmId", 0);
 
     // Read the content of the packet
     recvPacket >> ClientBuild;
@@ -792,7 +794,27 @@ int WorldSocket::HandleAuthSession (WorldPacket& recvPacket)
 
     QueryResult *result =
           LoginDatabase.PQuery ("SELECT "
-                                "id, "                      //0
+		  "a.id, "                      //0
+		  "a.gmlevel, "                 //1
+		  "a.sessionkey, "              //2
+		  "a.last_ip, "                 //3
+		  "a.locked, "                  //4
+		  "a.v, "                       //5
+		  "a.s, "                       //6
+		  "a.expansion, "               //7
+		  "a.mutetime, "                //8
+		  "a.locale, "                  //9
+		  "a_fp.accountid, "        //10
+		  "a_fp.realmID, "        //11
+		  "a_fp.security "        //12
+		  "FROM account as a "
+		  "LEFT JOIN account_forcepermission as a_fp "
+		  "ON a.id = a_fp.AccountId "
+		  "WHERE username = '%s'"
+		  "ORDER BY FIELD(a_fp.realmid, '%u') DESC",
+		  safe_account.c_str (), realmID);
+
+/*                                "id, "                      //0
                                 "gmlevel, "                 //1
                                 "sessionkey, "              //2
                                 "last_ip, "                 //3
@@ -804,7 +826,7 @@ int WorldSocket::HandleAuthSession (WorldPacket& recvPacket)
                                 "locale "                   //9
                                 "FROM account "
                                 "WHERE username = '%s'",
-                                safe_account.c_str ());
+                                safe_account.c_str ());*/
 
     // Stop if the account is not found
     if (!result)
@@ -855,7 +877,18 @@ int WorldSocket::HandleAuthSession (WorldPacket& recvPacket)
     }
 
     id = fields[0].GetUInt32 ();
-    security = fields[1].GetUInt16 ();
+    //security = fields[1].GetUInt16 ();
+
+	if( fields[10].GetUInt32() != NULL && fields[10].GetUInt32() == id )
+	{
+		if( fields[11].GetUInt32() != NULL && fields[11].GetUInt32() == realmID )
+			security = fields[12].GetUInt32();
+		else
+			security = fields[1].GetUInt32();
+	}
+	else
+		security = fields[1].GetUInt32();
+
     if(security > SEC_ADMINISTRATOR)                        // prevent invalid security settings in DB
         security = SEC_ADMINISTRATOR;
 

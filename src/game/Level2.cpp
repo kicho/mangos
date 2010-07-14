@@ -41,6 +41,7 @@
 #include <iostream>
 #include <fstream>
 #include <map>
+#include "Config/Config.h"
 
 #include "TargetedMovementGenerator.h"                      // for HandleNpcUnFollowCommand
 
@@ -2154,6 +2155,7 @@ bool ChatHandler::HandlePInfoCommand(const char* args)
     uint32 total_player_time = 0;
     uint32 level = 0;
     uint32 latency = 0;
+	uint32 realmID = sConfig.GetIntDefault("RealmId", 0);
 
     // get additional information from Player object
     if (target)
@@ -2193,12 +2195,23 @@ bool ChatHandler::HandlePInfoCommand(const char* args)
     AccountTypes security = SEC_PLAYER;
     std::string last_login = GetMangosString(LANG_ERROR);
 
-    QueryResult* result = LoginDatabase.PQuery("SELECT username,gmlevel,last_ip,last_login FROM account WHERE id = '%u'",accId);
+    //QueryResult* result = LoginDatabase.PQuery("SELECT username,gmlevel,last_ip,last_login FROM account WHERE id = '%u'",accId);
+	QueryResult* result = loginDatabase.PQuery("SELECT a.username, a.gmlevel, a.last_ip, a.last_login, a_fp.accountid, a_fp.security, a_fp.realmid FROM account AS a LEFT JOIN account_forcepermission AS a_fp on a.id = a_fp.accountid WHERE a.id = '%u' ORDER BY FIELD(a_fp.realmid,'%u') DESC", accId, realmID);
     if (result)
     {
         Field* fields = result->Fetch();
         username = fields[0].GetCppString();
-        security = (AccountTypes)fields[1].GetUInt32();
+        //security = (AccountTypes)fields[1].GetUInt32();
+
+		if( fields[4].GetUInt32() != NULL && fields[4].GetUInt32() == accId )
+		{
+			if( fields[6].GetUInt32() != NULL && fields[6].GetUInt32() == realmID )
+				security = (AccountTypes)fields[5].GetUInt16();
+			else
+				security = (AccountTypes)fields[1].GetUInt32();
+		}
+		else
+			security = (AccountTypes)fields[1].GetUInt32();
 
         if (GetAccessLevel() >= security)
         {
