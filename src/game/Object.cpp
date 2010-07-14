@@ -662,6 +662,51 @@ void Object::BuildValuesUpdate(uint8 updatetype, ByteBuffer * data, UpdateMask *
                     else
                         *data << (m_uint32Values[ index ] & ~UNIT_DYNFLAG_TAPPED);
                 }
+				// Friendly players in group (cannot be attacked - blue)
+                else if(index == UNIT_FIELD_BYTES_2 || index == UNIT_FIELD_FACTIONTEMPLATE)
+                {
+                    bool ch = false;
+                    if((GetTypeId() == TYPEID_PLAYER || GetTypeId() == TYPEID_UNIT) && target != this)
+                    {
+                        bool forcefriendly = false; // bool for pets/totems to offload more code from the big if below
+                        if(GetTypeId() == TYPEID_UNIT)
+                        {
+                            if(((Creature*)this)->isTotem() || ((Creature*)this)->isPet())
+                            {
+                                Unit* P_Owner = ((Creature*)this)->GetOwner();
+                                if(P_Owner && P_Owner->GetTypeId() == TYPEID_PLAYER && P_Owner->IsFriendlyTo(target)
+                                   && P_Owner != target && (target->IsInSameGroupWith((Player*)P_Owner) || target->IsInSameRaidWith((Player*)P_Owner)))
+                                   forcefriendly = true;
+                            }
+                        }
+
+                        if(target->IsInSameGroupWith((Player*)this) || target->IsInSameRaidWith((Player*)this))
+                        {
+                            if(index == UNIT_FIELD_BYTES_2)
+                            {
+                                DEBUG_LOG("-- VALUES_UPDATE: Sending '%s' the blue-group-fix from '%s' (flag)", target->GetName(), ((Unit*)this)->GetName());
+                                *data << ( m_uint32Values[ index ] & (UNIT_BYTE2_FLAG_SANCTUARY << 8) ); // this flag is at uint8 offset 1 !!
+                                ch = true;
+                            }
+                            else if(index == UNIT_FIELD_FACTIONTEMPLATE)
+                            {
+                                FactionTemplateEntry const *ft1, *ft2;
+                                ft1 = ((Unit*)this)->getFactionTemplateEntry();
+                                ft2 = ((Unit*)target)->getFactionTemplateEntry();
+                                if(ft1 && ft2 && !ft1->IsFriendlyTo(*ft2))
+                                {
+                                    uint32 faction = ((Player*)target)->getFaction(); // pretend that all other HOSTILE players have own faction, to allow follow, heal, rezz (trade wont work)
+                                    DEBUG_LOG("-- VALUES_UPDATE: Sending '%s' the blue-group-fix from '%s' (faction %u)", target->GetName(), ((Unit*)this)->GetName(), faction);
+                                    *data << uint32(faction);
+                                    ch = true;
+                                }
+                            }
+                        }
+                    }
+                    if(!ch)
+                        *data << m_uint32Values[ index ];
+
+                }
                 else
                 {
                     // send in current format (float as float, uint32 as uint32)
@@ -1467,6 +1512,19 @@ void WorldObject::MonsterWhisper(const char* text, uint64 receiver, bool IsBossW
     BuildMonsterChat(&data,IsBossWhisper ? CHAT_MSG_RAID_BOSS_WHISPER : CHAT_MSG_MONSTER_WHISPER,text,LANG_UNIVERSAL,GetName(),receiver);
 
     player->GetSession()->SendPacket(&data);
+}
+
+void Object::ForceValuesUpdateAtIndex(uint32 i)
+{
+	m_uint32Values_mirror[i] = GetUInt32Value(i) + 1; // makes server think the field changed
+	if(m_inWorld)
+	{
+		if(!m_objectUpdated)
+		{
+			ObjectAccessor::Instance().AddUpdateObject(this);
+			m_objectUpdated = true;
+    }
+  }
 }
 
 namespace MaNGOS
