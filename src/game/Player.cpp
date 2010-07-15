@@ -2523,6 +2523,9 @@ void Player::GiveXP(uint32 xp, Unit* victim)
 
     uint32 level = getLevel();
 
+	if(level < 66 && GetMapId() == 571)
+		return;
+
     // XP to money conversion processed in Player::RewardQuest
     if(level >= sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL))
         return;
@@ -21893,6 +21896,7 @@ void Player::ActivateSpec(uint8 specNum)
 
     UnsummonPetTemporaryIfAny();
 
+	RemoveAllEnchantments(TEMP_ENCHANTMENT_SLOT);
     ApplyGlyphs(false);
 
     // copy of new talent spec (we will use it as model for converting current tlanet state to new)
