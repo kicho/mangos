@@ -53,6 +53,7 @@ class MANGOS_DLL_SPEC SpellAuraHolder
         void _RemoveSpellAuraHolder();
         void SendAuraUpdate(bool remove);
         void HandleSpellSpecificBoosts(bool apply);
+		void HandleIgnoreUnitState(bool Apply, bool Real);
         void CleanupTriggeredSpells();
 
         void setDiminishGroup(DiminishingGroup group) { m_AuraDRGroup = group; }

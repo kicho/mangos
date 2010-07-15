@@ -2016,6 +2016,19 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 }
                 break;
             }
+			case SPELLFAMILY_MAGE:
+            {
+                // hack for Fingers of Frost stacks
+                if (GetId() == 74396)
+                {
+                    if (Aura *aur = target->GetAura(74396, EFFECT_INDEX_0))
+                    {
+                        if (aur->GetStackAmount() < 3)
+							aur->GetHolder()->SetAuraCharges(3);
+                    }
+                }
+                break;
+            }
             case SPELLFAMILY_SHAMAN:
             {
                 // Tidal Force
@@ -8189,7 +8202,7 @@ bool SpellAuraHolder::IsNeedVisibleSlot(Unit const* caster) const
         return true;
     else if (IsSpellHaveAura(m_spellProto, SPELL_AURA_MOD_IGNORE_SHAPESHIFT))
         return true;
-    else if (IsSpellHaveAura(m_spellProto, SPELL_AURA_262))
+    else if (IsSpellHaveAura(m_spellProto, SPELL_AURA_IGNORE_UNIT_STATE))
         return true;
 
     // passive auras (except totem auras) do not get placed in the slots
@@ -8908,6 +8921,16 @@ bool SpellAuraHolder::IsEmptyHolder() const
         if (Aura *aur = m_auras[i])
             return false;
     return true;
+}
+
+void SpellAuraHolder::HandleIgnoreUnitState(bool apply, bool Real)
+{
+    if(m_target->GetTypeId() != TYPEID_PLAYER || !Real)
+        return;
+
+    // for alowing charge/intercept/intervene in different stances
+    if (GetId() == 57499 && apply)
+        SetAuraFlags(19);
 }
 
 void SpellAuraHolder::UnregisterSingleCastHolder()

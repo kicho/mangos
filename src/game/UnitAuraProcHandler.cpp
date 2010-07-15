@@ -430,6 +430,14 @@ bool Unit::IsTriggeredAtSpellProcEvent(Unit *pVictim, SpellAuraHolder* holder, S
         modOwner->ApplySpellMod(spellProto->Id,SPELLMOD_FREQUENCY_OF_SUCCESS,chance);
     }
 
+	// Fingers of Frost: save roll for re-use in Frostbite trigger
+	if(holder->GetSpellProto()->Id == 44544)
+    {
+        sLog.outDebug("Fingers of Frost: saving roll; triggered by %u", holder->GetId());
+        m_lastAuraProcRoll = rand_chance();
+        return chance > m_lastAuraProcRoll;
+    }
+
     return roll_chance_f(chance);
 }
 
