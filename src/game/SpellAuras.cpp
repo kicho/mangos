@@ -2419,8 +2419,8 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     }
                     else 
                     {
-                        if( m_target->GetTypeId() != TYPEID_PLAYER && m_target->GetEntry() == 23876 )
-                            ((Creature*)m_target)->ForcedDespawn();
+                        if( target->GetTypeId() != TYPEID_PLAYER && target->GetEntry() == 23876 )
+                            ((Creature*)target)->ForcedDespawn();
                     }
                     return;
                 case 57806: // Q: The Restless Dead
@@ -2432,18 +2432,18 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     }
                     else 
                     {
-                        if( m_target->GetTypeId() != TYPEID_PLAYER && m_target->GetEntry() == 31043 )
-                            ((Creature*)m_target)->ForcedDespawn();
+                        if( target->GetTypeId() != TYPEID_PLAYER && target->GetEntry() == 31043 )
+                            ((Creature*)target)->ForcedDespawn();
                     }
                     return;
                 case 43115: // Q: Test at Sea
-                    if( apply && m_target->GetEntry() == 24120 )
+                    if( apply && target->GetEntry() == 24120 )
                     {
                         switch( irand(0, 3))
                         {
-                            case 0: m_target->MonsterYell("I don't feel so good...", LANG_UNIVERSAL, 0); break;
-                            case 1: m_target->MonsterYell("That liquid... it reeks!", LANG_UNIVERSAL, 0); break;
-                            case 2: m_target->MonsterYell("Someone shoot that bat down!", LANG_UNIVERSAL, 0); break;
+                            case 0: target->MonsterYell("I don't feel so good...", LANG_UNIVERSAL, 0); break;
+                            case 1: target->MonsterYell("That liquid... it reeks!", LANG_UNIVERSAL, 0); break;
+                            case 2: target->MonsterYell("Someone shoot that bat down!", LANG_UNIVERSAL, 0); break;
                         }
                         if (Unit* caster = GetCaster())
                             if(caster->GetTypeId() == TYPEID_PLAYER )
@@ -6097,11 +6097,13 @@ void Aura::HandleAuraGhost(bool apply, bool /*Real*/)
 
 void Aura::HandleAuraAllowFlight(bool apply, bool Real)
 {
+	Unit *target = GetTarget();
+
     // all applied/removed only at real aura add/remove
     if(!Real)
         return;
 
-	if (!m_target || m_target->GetTypeId() != TYPEID_PLAYER)
+	if (!target || target->GetTypeId() != TYPEID_PLAYER)
 		return; 
 
     // allow fly

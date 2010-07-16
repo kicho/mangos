@@ -676,7 +676,7 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                     damage += int32(m_caster->GetTotalAttackPowerValue(RANGED_ATTACK)*0.1f);
                 }
 				// Black Arrow
-				else if (m_spellProto->SpellFamilyFlags & UI64LIT(0x0800000000000080))
+				else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0800000000000080))
 				{
 					damage += int32(m_caster->GetTotalAttackPowerValue(RANGED_ATTACK)*0.1f);
 				}
@@ -1123,20 +1123,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     m_caster->CastSpell(m_caster, spell_id, true, NULL);
                     return;
                 }
-				case 33655: // Q: Mission: Gateways Murketh and Shaadraz
-                {
-                    if( m_caster->GetTypeId() != TYPEID_PLAYER )
-                        return;
-                    if( !m_caster->isInFlight() )
-                        return;
-
-                    if( m_caster->GetDistance( m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, -145.554, 1511.28, 34.3641) < 25 )
-                        ((Player*)m_caster)->KilledMonsterCredit( 19291, 0 );
-                    if( m_caster->GetDistance( m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, -304.408, 1524.45, 37.9685 ) < 25 )
-                        ((Player*)m_caster)->KilledMonsterCredit( 19292, 0 );
-					return;
-                }
-                case 35745:                                 // Socrethar's Stone
+				case 35745:                                 // Socrethar's Stone
                 {
                     uint32 spell_id;
                     switch(m_caster->GetAreaId())

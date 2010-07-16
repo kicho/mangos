@@ -1514,19 +1514,6 @@ void WorldObject::MonsterWhisper(const char* text, uint64 receiver, bool IsBossW
     player->GetSession()->SendPacket(&data);
 }
 
-void Object::ForceValuesUpdateAtIndex(uint32 i)
-{
-	m_uint32Values_mirror[i] = GetUInt32Value(i) + 1; // makes server think the field changed
-	if(m_inWorld)
-	{
-		if(!m_objectUpdated)
-		{
-			ObjectAccessor::Instance().AddUpdateObject(this);
-			m_objectUpdated = true;
-    }
-  }
-}
-
 namespace MaNGOS
 {
     class MonsterChatBuilder
@@ -1721,6 +1708,19 @@ Creature* WorldObject::SummonCreature(uint32 id, float x, float y, float z, floa
 
     // return the creature therewith the summoner has access to it
     return pCreature;
+}
+
+void Object::ForceValuesUpdateAtIndex(uint32 i)
+{
+  m_uint32Values_mirror[i] = GetUInt32Value(i) + 1; // makes server think the field changed
+  if(m_inWorld)
+  {
+    if(!m_objectUpdated)
+    {
+      AddToClientUpdateList();
+      m_objectUpdated = true;
+    }
+  }
 }
 
 namespace MaNGOS
