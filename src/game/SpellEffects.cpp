@@ -2180,6 +2180,11 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 					m_caster->CastSpell(m_caster, 63848, true);
                     return;
                 }
+				case 51690:                                 // Killing Spree
+                {
+                    m_caster->CastSpell(m_caster, 61851, true);
+                    return;
+                }
             }
             break;
         }
@@ -7953,8 +7958,15 @@ void Spell::EffectActivateRune(SpellEffectIndex eff_idx)
 
 void Spell::EffectTitanGrip(SpellEffectIndex /*eff_idx*/)
 {
-    if (unitTarget && unitTarget->GetTypeId() == TYPEID_PLAYER)
-        ((Player*)unitTarget)->SetCanTitanGrip(true);
+    if (!unitTarget || unitTarget->GetTypeId()  != TYPEID_PLAYER)
+        return;
+
+    Player *player = (Player*)unitTarget;
+    player->SetCanTitanGrip(true);
+
+    // Titan's Grip damage penalty for 2H weapons
+    if (!unitTarget->HasAura(49152) && player->IsTwoHandUsedInDualWield())
+        unitTarget->CastSpell(unitTarget, 49152, true);
 }
 
 void Spell::EffectRenamePet(SpellEffectIndex /*eff_idx*/)
