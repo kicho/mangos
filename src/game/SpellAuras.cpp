@@ -1828,6 +1828,10 @@ void Aura::TriggerSpell()
                     caster->CastSpell(triggerTarget, trigger_spell_id, true, NULL, this);
                 return;
             }
+			// Intense Cold
+            case 48094:
+                triggerTarget->CastSpell(triggerTarget, trigger_spell_id, true, NULL, this);
+                return;
             case 53563:                                     // Beacon of Light
                 // original caster must be target (beacon)
                 target->CastSpell(target, trigger_spell_id, true, NULL, this, target->GetGUID());
@@ -2474,7 +2478,8 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     int32 bp0 = m_modifier.m_amount;
 
                     if (Unit* caster = GetCaster())
-                        target->CastCustomSpell(caster, 48210, &bp0, NULL, NULL, true, NULL, this);
+                        //target->CastCustomSpell(caster, 48210, &bp0, NULL, NULL, true, NULL, this);
+						target->CastCustomSpell(caster,48210,&bp0,NULL,NULL,true,NULL,this,GetCasterGUID());
                 }
             }
             break;
@@ -4616,6 +4621,19 @@ void Aura::HandlePeriodicEnergize(bool apply, bool Real)
                 break;
             default:
                 break;
+        }
+    }
+
+	if (!apply && !loading)
+    {
+		switch (GetId())
+        {
+		case 5229:                                    // Druid Bear Enrage
+			if (target->HasAura(51185))               // King of the Jungle self Enrage bonus with infinity duration
+				target->RemoveAurasDueToSpell(51185);
+			break;
+		default:
+			break;
         }
     }
 
