@@ -306,13 +306,13 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 
     movementInfo.UpdateTime(getMSTime());
 
-    WorldPacket data(opcode, recv_data.size());
-    data.appendPackGUID(mover->GetGUID());                  // write guid
-    movementInfo.Write(data);                               // write data
-    mover->SendMessageToSetExcept(&data, _player);
-
     if(plMover)                                             // nothing is charmed, or player charmed
     {
+		WorldPacket data(opcode, recv_data.size());
+		data.appendPackGUID(mover->GetGUID());                  // write guid
+		movementInfo.Write(data);                               // write data
+		mover->SendMessageToSetExcept(&data, _player);
+
         plMover->SetPosition(movementInfo.GetPos()->x, movementInfo.GetPos()->y, movementInfo.GetPos()->z, movementInfo.GetPos()->o);
         plMover->m_movementInfo = movementInfo;
         plMover->UpdateFallInformationIfNeed(movementInfo, opcode);
@@ -441,12 +441,18 @@ void WorldSession::HandleSetActiveMoverOpcode(WorldPacket &recv_data)
     ObjectGuid guid;
     recv_data >> guid;
 
-    if(_player->GetMover()->GetObjectGuid() != guid)
+
+	if (Unit *pMover = ObjectAccessor::GetUnit(*GetPlayer(), guid))
+        GetPlayer()->SetMover(pMover);
+    else
+        GetPlayer()->SetMover(NULL);
+
+    /*if(_player->GetMover()->GetObjectGuid() != guid)
     {
         sLog.outError("HandleSetActiveMoverOpcode: incorrect mover guid: mover is %s and should be %s",
             _player->GetMover()->GetObjectGuid().GetString().c_str(), guid.GetString().c_str());
         return;
-    }
+    }*/
 }
 
 void WorldSession::HandleMoveNotActiveMover(WorldPacket &recv_data)
