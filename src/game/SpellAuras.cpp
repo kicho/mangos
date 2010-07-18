@@ -2080,7 +2080,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     if(!caster)
                         return;
 
-                    caster->CastSpell(m_target, 55095, true);
+                    caster->CastSpell(target, 55095, true);
                 }
                 break;
             }
@@ -4421,13 +4421,13 @@ void Aura::HandleModMechanicImmunity(bool apply, bool /*Real*/)
 	// Demonic Circle
     if (GetSpellProto()->SpellFamilyName == SPELLFAMILY_WARLOCK && GetSpellProto()->SpellIconID == 3221)
     {
-        if (m_target->GetTypeId() != TYPEID_PLAYER)
+        if (target->GetTypeId() != TYPEID_PLAYER)
             return;
         if (apply)
         {
-            GameObject* obj = m_target->GetGameObject(48018);
+            GameObject* obj = target->GetGameObject(48018);
             if (obj)
-                ((Player*)m_target)->TeleportTo(obj->GetMapId(),obj->GetPositionX(),obj->GetPositionY(),obj->GetPositionZ(),obj->GetOrientation());
+                ((Player*)target)->TeleportTo(obj->GetMapId(),obj->GetPositionX(),obj->GetPositionY(),obj->GetPositionZ(),obj->GetOrientation());
         }
     }
 
@@ -4728,11 +4728,11 @@ void Aura::HandleAuraPeriodicDummy(bool apply, bool Real)
             {
                 case 48018:
                        if (apply)
-                          m_target->CastSpell(m_target, 62388, true);                
+                          target->CastSpell(target, 62388, true);                
                         else
                         {
-                          m_target->RemoveGameObject(spell->Id,true);
-                          m_target->RemoveAurasDueToSpell(62388);
+                          target->RemoveGameObject(spell->Id,true);
+                          target->RemoveAurasDueToSpell(62388);
                         }
                 break;
             }
@@ -7417,19 +7417,19 @@ void Aura::PeriodicDummyTick()
             switch (spell->Id)
             {
                 case 48018:
-                    GameObject* obj = m_target->GetGameObject(spell->Id);
+                    GameObject* obj = target->GetGameObject(spell->Id);
                     if (!obj)
                     {
-                         m_target->RemoveAurasDueToSpell(spell->Id);
-                         m_target->RemoveAurasDueToSpell(62388); 
+                         target->RemoveAurasDueToSpell(spell->Id);
+                         target->RemoveAurasDueToSpell(62388); 
                          return;
                     }
                     // We must take a range of teleport spell, not summon.
                     const SpellEntry* goToCircleSpell = sSpellStore.LookupEntry(48020);
-                    if (m_target->IsWithinDist(obj,GetSpellMaxRange(sSpellRangeStore.LookupEntry(goToCircleSpell->rangeIndex))))
-                        m_target->CastSpell(m_target, 62388, true);
+                    if (target->IsWithinDist(obj,GetSpellMaxRange(sSpellRangeStore.LookupEntry(goToCircleSpell->rangeIndex))))
+                        target->CastSpell(target, 62388, true);
                     else
-                        m_target->RemoveAurasDueToSpell(62388);
+                        target->RemoveAurasDueToSpell(62388);
             }
             break;
         case SPELLFAMILY_ROGUE:
@@ -8698,7 +8698,7 @@ void SpellAuraHolder::HandleSpellSpecificBoosts(bool apply)
                     return;
 
                 if (apply && caster->HasAura(31821))
-                    caster->CastSpell(caster, 64364, true, NULL, this);
+                    caster->CastSpell(caster, 64364, true, NULL);
                 else if (!apply)
                     caster->RemoveAurasDueToSpell(64364);
             }
@@ -8709,7 +8709,7 @@ void SpellAuraHolder::HandleSpellSpecificBoosts(bool apply)
                     return;
 
                 if (apply && caster->HasAura(19746))
-                    caster->CastSpell(caster, 64364, true, NULL, this);
+                    caster->CastSpell(caster, 64364, true, NULL);
                 else if (!apply)
                     caster->RemoveAurasDueToSpell(64364);
             }
