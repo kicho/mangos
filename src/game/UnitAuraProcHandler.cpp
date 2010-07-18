@@ -2634,6 +2634,20 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 break;
             }
             break;
+			// Hungering Cold - not break from diseases
+			if (dummySpell->SpellIconID == 2797)
+			{
+				if (procSpell && procSpell->Dispel == DISPEL_DISEASE)
+                    return false;
+			}
+			break;
+			// Rune strike
+			if (dummySpell->Id == 56817)
+            {
+				if (procSpell && procSpell->Id != 56815)
+					return false;
+            }
+			break;
         }
         default:
             break;
@@ -3161,7 +3175,7 @@ bool Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 damage, Aura* tr
         case SPELLFAMILY_SHAMAN:
         {
             // Lightning Shield (overwrite non existing triggered spell call in spell.dbc
-            if (auraSpellInfo->SpellFamilyFlags & UI64LIT(0x0000000000000400))
+			if (auraSpellInfo->SpellFamilyFlags & UI64LIT(0x0000000000000400) && auraSpellInfo->SpellVisual[0] == 37)
             {
                 switch(auraSpellInfo->Id)
                 {
