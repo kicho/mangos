@@ -6246,6 +6246,8 @@ uint32 Unit::SpellDamageBonusDone(Unit *pVictim, SpellEntry const *spellProto, u
                 if (pVictim->GetHealth() * 100 / pVictim->GetMaxHealth() <= 25)
                     DoneTotalMod *= 4;
             }
+			else if (spellProto->TargetAuraState == AURA_STATE_CONFLAGRATE)
+				return pdamage;
             break;
         }
         case SPELLFAMILY_PRIEST:
