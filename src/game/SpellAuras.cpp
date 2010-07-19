@@ -3869,6 +3869,17 @@ void Aura::HandleAuraModStun(bool apply, bool Real)
             target->SendMessageToSet(&data, true);
         }
 
+		// Seduction (Succubus spell)
+        if (m_spellProto->Id == 6358)
+        {
+            Unit* pCaster = GetCaster();
+            if(!pCaster)
+                return;
+
+            pCaster->InterruptSpell(CURRENT_CHANNELED_SPELL,false);
+            return;
+        }
+
         // Wyvern Sting
         if (GetSpellProto()->SpellFamilyName == SPELLFAMILY_HUNTER && GetSpellProto()->SpellFamilyFlags & UI64LIT(0x0000100000000000))
         {
@@ -5989,9 +6000,13 @@ void Aura::HandleShapeshiftBoosts(bool apply)
             break;
         case FORM_SHADOW:
             spellId1 = 49868;
+			spellId2 = 71167;
 
-            if(target->GetTypeId() == TYPEID_PLAYER)      // Spell 49868 have same category as main form spell and share cooldown
+            if(target->GetTypeId() == TYPEID_PLAYER)      // Spell 49868 and 71167 have same category as main form spell and share cooldown
+			{
                 ((Player*)target)->RemoveSpellCooldown(49868);
+				((Player*)target)->RemoveSpellCooldown(71167);
+			}
             break;
         case FORM_GHOSTWOLF:
             spellId1 = 67116;
