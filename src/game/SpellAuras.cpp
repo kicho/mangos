@@ -3781,7 +3781,7 @@ void Aura::HandleAuraModStun(bool apply, bool Real)
 
     Unit *target = GetTarget();
 
-	if(target->isInFlight())
+	if(target->IsTaxiFlying())
 		return;
 
     if (apply)
@@ -3870,7 +3870,7 @@ void Aura::HandleAuraModStun(bool apply, bool Real)
         }
 
 		// Seduction (Succubus spell)
-        if (m_spellProto->Id == 6358)
+        if (GetSpellProto()->Id == 6358)
         {
             Unit* pCaster = GetCaster();
             if(!pCaster)

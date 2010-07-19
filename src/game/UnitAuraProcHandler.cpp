@@ -1582,7 +1582,7 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
             if (dummySpell->SpellIconID == 2850)
             {
                 if (!procSpell)
-                    return false;
+                    return SPELL_AURA_PROC_FAILED;
 
                 // Enrage (bear) - single rank - the aura for the bear form from the 2 existing kotj auras has a miscValue == 126
                 if (procSpell->Id == 5229 && triggeredByAura->GetMiscValue() == 126)
@@ -1601,7 +1601,7 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                     target = this;
                     break;
                 }
-                return false;
+                return SPELL_AURA_PROC_FAILED;
             }
             // Eclipse
             else if (dummySpell->SpellIconID == 2856)
@@ -2280,10 +2280,10 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
             if (dummySpell->SpellFamilyFlags & UI64LIT(0x200000))
             {
                 if(GetTypeId()!=TYPEID_PLAYER)
-                    return false;
+                    return SPELL_AURA_PROC_FAILED;
 
                 if(!castItem || !castItem->IsEquipped())
-                    return false;
+                    return SPELL_AURA_PROC_FAILED;
 
                 //  firehit =  dummySpell->EffectBasePoints[0] / ((4*19.25) * 1.3);
                 float fire_onhit = dummySpell->EffectBasePoints[0] / 100.0;
@@ -2316,10 +2316,10 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
 
                 // If not ready, we should  return, shouldn't we?!
                 else
-                    return false;
+                    return SPELL_AURA_PROC_FAILED;
 
                 CastCustomSpell(pVictim,triggered_spell_id,&basepoints[0],NULL,NULL,true,castItem,triggeredByAura);
-                return true;
+                return SPELL_AURA_PROC_OK;
             }
             // Improved Water Shield
 
@@ -2477,7 +2477,7 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
             {
                 // 1 dummy aura for dismiss rune blade
                 if (effIndex != EFFECT_INDEX_1)
-                    return false;
+                    return SPELL_AURA_PROC_FAILED;
 
                 Pet* runeBlade = FindGuardianWithEntry(27893);
 
@@ -2647,14 +2647,14 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
 			if (dummySpell->SpellIconID == 2797)
 			{
 				if (procSpell && procSpell->Dispel == DISPEL_DISEASE)
-                    return false;
+                    return SPELL_AURA_PROC_FAILED;
 			}
 			break;
 			// Rune strike
 			if (dummySpell->Id == 56817)
             {
 				if (procSpell && procSpell->Id != 56815)
-					return false;
+					return SPELL_AURA_PROC_FAILED;
             }
 			break;
         }
@@ -2780,7 +2780,7 @@ SpellAuraProcResult Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 d
                 //case 37030: break;                        // Chaotic Temperament
 				case 38164:                                 // Unyielding Knights
 					if (!pVictim || pVictim->GetTypeId() != TYPEID_UNIT || pVictim->GetEntry() != 19457)
-						return false;
+						return SPELL_AURA_PROC_FAILED;
 					break;
                 //case 38363: break;                        // Gushing Wound
                 //case 39215: break;                        // Gushing Wound
