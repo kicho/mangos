@@ -457,9 +457,28 @@ void BattleGround::Update(uint32 diff)
             {
                 //TODO : add arena sound PlaySoundToAll(SOUND_ARENA_START);
 
+				Group *groupOne = NULL;
                 for(BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
                     if (Player *plr = sObjectMgr.GetPlayer(itr->first))
+					{
                         plr->RemoveAurasDueToSpell(SPELL_ARENA_PREPARATION);
+						if(plr->GetGroup())
+                        {
+                            if(!groupOne)
+                             {
+                                groupOne = plr->GetGroup();
+                                 plr->SetUInt32Value(PLAYER_DUEL_TEAM, 1);
+                             }
+                             else if(plr->GetGroup() == groupOne)
+                             {
+                                 plr->SetUInt32Value(PLAYER_DUEL_TEAM, 1);
+                             }
+                             else
+                             {
+                                 plr->SetUInt32Value(PLAYER_DUEL_TEAM, 2);
+                             }
+                         }
+                    }
 
                 CheckArenaWinConditions();
             }
