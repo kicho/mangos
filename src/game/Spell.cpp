@@ -2808,6 +2808,11 @@ void Spell::cast(bool skipCheck)
             // Ice Block
             if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000008000000000))
                 AddPrecastSpell(41425);                     // Hypothermia
+
+			// Mirror Image (glyph)
+			else if (m_spellInfo->Id == 55342 && m_caster->HasAura(63093))
+				AddPrecastSpell(65047);                     // Mirror Image (summon 4th immage)
+
 			// Fingers of Frost
 			else if (m_spellInfo->Id == 44544)
 				AddPrecastSpell(74396);
