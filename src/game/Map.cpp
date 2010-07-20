@@ -1715,7 +1715,9 @@ bool InstanceMap::Add(Player *player)
                         GetInstanceSave()->GetMapId(), GetInstanceSave()->GetInstanceId(),
                         GetInstanceSave()->GetDifficulty(), GetInstanceSave()->GetPlayerCount(),
                         GetInstanceSave()->GetGroupCount(), GetInstanceSave()->CanReset());
-                    ASSERT(false);
+                    //ASSERT(false);
+					player->RepopAtGraveyard();
+					return false;
                 }
             }
             else
