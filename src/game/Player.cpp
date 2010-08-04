@@ -21956,9 +21956,15 @@ void Player::ActivateSpec(uint8 specNum)
     if(specNum >= GetSpecsCount())
         return;
 
-    UnsummonPetTemporaryIfAny();
+	if (GetMap()->IsBattleGround() && !HasAura(44521)) // In BattleGround with no Preparation buff       
+		return;
 
+    UnsummonPetTemporaryIfAny();
+	UnsummonAllTotems();
+	ClearComboPointHolders();
+	ClearAllReactives();
 	RemoveAllEnchantments(TEMP_ENCHANTMENT_SLOT);
+	RemoveArenaAuras();
 	SendActionButtons(2);
     ApplyGlyphs(false);
 
