@@ -157,9 +157,9 @@ void WorldSession::HandleWhoOpcode( WorldPacket & recv_data )
                 continue;
         }
 
-        // do not process players which are not in world
+        /*// do not process players which are not in world
         if(!(itr->second->IsInWorld()))
-            continue;
+            continue;*/
 
         // check if target is globally visible for player
         if (!(itr->second->IsVisibleGloballyFor(_player)))
@@ -248,6 +248,39 @@ void WorldSession::HandleWhoOpcode( WorldPacket & recv_data )
         // 50 is maximum player count sent to client
         if ((++clientcount) == 50)
             break;
+    }
+
+	if (clientcount < 49)
+    {
+        // Fake players on WHO LIST                            0,   1,    2,   3,    4,   5     6
+        QueryResult *result = CharacterDatabase.Query("SELECT guid,name,race,class,level,zone,gender FROM characters WHERE online>1");
+        if (result)
+        {
+            do
+            {
+                Field *fields = result->Fetch();
+
+                std::string pname = fields[1].GetCppString();
+                std::string gname;
+                uint8 lvl = fields[4].GetUInt8();
+                uint32 class_ = fields[3].GetUInt32();
+                uint32 race = fields[2].GetUInt32();
+                uint32 pzoneid = fields[5].GetUInt32();
+				uint8 gender = fields[6].GetUInt8();
+
+                data << pname;                              // player name
+                data << gname;                              // guild name
+                data << uint32(lvl);                        // player level
+                data << uint32(class_);                     // player class
+                data << uint32(race);                       // player race
+                data << uint8(gender);                      // new 2.4.0
+                data << uint32(pzoneid);                    // player zone id
+
+                if ((++clientcount) == 49)
+                    break;
+            } while (result->NextRow());
+        }
+		delete result;
     }
 
     uint32 count = m.size();
