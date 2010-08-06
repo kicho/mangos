@@ -157,9 +157,9 @@ void WorldSession::HandleWhoOpcode( WorldPacket & recv_data )
                 continue;
         }
 
-        /*// do not process players which are not in world
+        // do not process players which are not in world
         if(!(itr->second->IsInWorld()))
-            continue;*/
+            continue;
 
         // check if target is globally visible for player
         if (!(itr->second->IsVisibleGloballyFor(_player)))
@@ -250,7 +250,7 @@ void WorldSession::HandleWhoOpcode( WorldPacket & recv_data )
             break;
     }
 
-	if (clientcount < 49)
+	if (sWorld.getConfig(CONFIG_BOOL_FAKE_WHO_LIST) && clientcount < 49)
     {
         // Fake players on WHO LIST                            0,   1,    2,   3,    4,   5     6
         QueryResult *result = CharacterDatabase.Query("SELECT guid,name,race,class,level,zone,gender FROM characters WHERE online>1");

@@ -209,12 +209,12 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
             uint32 pSecurity = player ? player->GetSession()->GetSecurity() : SEC_PLAYER;
             if (!player || (tSecurity == SEC_PLAYER && pSecurity > SEC_PLAYER && !player->isAcceptWhispers()))
             {
-                QueryResult *result = CharacterDatabase.PQuery("SELECT guid FROM characters WHERE name = '%s' AND online > 1", to.c_str());
-				if (!result)
+                /*QueryResult *result = CharacterDatabase.PQuery("SELECT guid FROM characters WHERE name = '%s' AND online > 1", to.c_str());
+				if (!result)*/
 					SendPlayerNotFoundNotice(to);
-                return;
+					return;
 
-				delete result;
+				//delete result;
             }
 
             if (!sWorld.getConfig(CONFIG_BOOL_ALLOW_TWO_SIDE_INTERACTION_CHAT) && tSecurity == SEC_PLAYER && pSecurity == SEC_PLAYER )
