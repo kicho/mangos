@@ -123,6 +123,7 @@ class MANGOS_DLL_SPEC PlayerbotAI
         // finds spell ID for matching substring args
         // in priority of full text match, spells not taking reagents, and highest rank
         uint32 getSpellId(const char* args, bool master = false) const;
+        uint32 getPetSpellId(const char* args) const;
 
         // extracts item ids from links
         void extractItemIds(const std::string& text, std::list<uint32>& itemIds) const;
@@ -181,6 +182,7 @@ class MANGOS_DLL_SPEC PlayerbotAI
         bool CastSpell(const char* args);
         bool CastSpell(uint32 spellId);
         bool CastSpell(uint32 spellId, Unit& target);
+        bool CastPetSpell(uint32 spellId, Unit* target = NULL);
         void UseItem(Item& item);
         void EquipItem(Item& item);
         //void Stay();
