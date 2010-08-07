@@ -72,10 +72,10 @@ class PlayerbotChatHandler: protected ChatHandler
 {
 public:
     explicit PlayerbotChatHandler(Player* pMasterPlayer) : ChatHandler(pMasterPlayer) {}
-    bool revive(const Player& botPlayer) { return HandleReviveCommand(botPlayer.GetName()); }
-    bool teleport(const Player& botPlayer) { return HandleNamegoCommand(botPlayer.GetName()); }
+    bool revive(Player& botPlayer) { return HandleReviveCommand((char*)botPlayer.GetName()); }
+    bool teleport(Player& botPlayer) { return HandleNamegoCommand((char*)botPlayer.GetName()); }
     void sysmessage(const char *str) { SendSysMessage(str); }
-    bool dropQuest(const char *str) { return HandleQuestRemove(str); }
+    bool dropQuest(char *str) { return HandleQuestRemoveCommand(str); }
 };
 
 PlayerbotAI::PlayerbotAI(PlayerbotMgr* const mgr, Player* const bot) :
@@ -216,6 +216,70 @@ uint32 PlayerbotAI::getSpellId(const char* args, bool master) const
             foundMatchUsesNoReagents = usesNoReagents;
         }
     }
+
+    return foundSpellId;
+}
+
+
+uint32 PlayerbotAI::getPetSpellId(const char* args) const
+{
+    if (!*args)
+        return 0;
+
+    Pet* pet = m_bot->GetPet();
+    if (!pet)
+        return 0;
+
+    std::string namepart = args;
+    std::wstring wnamepart;
+
+    if (!Utf8toWStr(namepart, wnamepart))
+        return 0;
+
+    // converting string that we try to find to lower case
+    wstrToLower(wnamepart);
+
+    int loc = GetMaster()->GetSession()->GetSessionDbcLocale();
+
+    uint32 foundSpellId = 0;
+    bool foundExactMatch = false;
+    bool foundMatchUsesNoReagents = false;
+
+    for (PetSpellMap::iterator itr = pet->m_spells.begin(); itr != pet->m_spells.end(); ++itr)
+     {
+         uint32 spellId = itr->first;
+
+         if (itr->second.state == PETSPELL_REMOVED || IsPassiveSpell(spellId))
+             continue;
+
+         const SpellEntry* pSpellInfo = sSpellStore.LookupEntry(spellId);
+         if (!pSpellInfo)
+             continue;
+
+         const std::string name = pSpellInfo->SpellName[loc];
+         if (name.empty() || !Utf8FitTo(name, wnamepart))
+             continue;
+
+         bool isExactMatch = (name.length() == wnamepart.length()) ? true : false;
+         bool usesNoReagents = (pSpellInfo->Reagent[0] <= 0) ? true : false;
+
+         // if we already found a spell
+         bool useThisSpell = true;
+         if (foundSpellId > 0)
+         {
+             if (isExactMatch && !foundExactMatch) {}
+             else if (usesNoReagents && !foundMatchUsesNoReagents) {}
+             else if (spellId > foundSpellId) {}
+             else
+                 useThisSpell = false;
+         }
+         if (useThisSpell)
+         {
+             foundSpellId = spellId;
+             foundExactMatch = isExactMatch;
+             foundMatchUsesNoReagents = usesNoReagents;
+         }
+     }
 
     return foundSpellId;
 }
@@ -820,7 +884,7 @@ uint8 PlayerbotAI::GetBaseManaPercent(const Unit& target) const
     if (target.GetPower(POWER_MANA) >= target.GetCreateMana())
         return (100);
     else
-        return (static_cast<float> (target.GetPower(POWER_MANA)) / target.GetMaxPower(POWER_MANA)) * 100;
+        return (static_cast<float> (target.GetPower(POWER_MANA)) / target.GetCreateMana()) * 100;
 }
 
 uint8 PlayerbotAI::GetBaseManaPercent() const
@@ -2221,6 +2285,61 @@ bool PlayerbotAI::CastSpell(uint32 spellId)
     return true;
 }
 
+bool PlayerbotAI::CastPetSpell(uint32 spellId, Unit* target)
+{
+    if (spellId == 0)
+        return false;
+
+    Pet* pet = m_bot->GetPet();
+    if (!pet)
+        return false;
+
+    if (pet->HasSpellCooldown(spellId))
+        return false;
+
+    const SpellEntry* const pSpellInfo = sSpellStore.LookupEntry(spellId);
+    if (!pSpellInfo)
+    {
+        TellMaster("Missing spell entry in CastPetSpell()");
+        return false;
+    }
+
+    // set target
+    Unit* pTarget;
+    if (!target)
+    {
+        uint64 targetGUID = m_bot->GetSelection();
+        pTarget = ObjectAccessor::GetUnit(*m_bot, targetGUID);
+    }
+    else
+        pTarget = target;
+
+    if (IsPositiveSpell(spellId))
+    {
+        if (pTarget && !m_bot->IsFriendlyTo(pTarget))
+            pTarget = m_bot;
+    }
+    else
+    {
+        if (pTarget && m_bot->IsFriendlyTo(pTarget))
+            return false;
+
+        if (!pet->isInFrontInMap(pTarget, 10)) // distance probably should be calculated
+        {
+            pet->SetInFront(pTarget);
+            MovementUpdate();
+        }
+    }
+
+    pet->CastSpell(pTarget, pSpellInfo, false);
+
+    Spell* const pSpell = pet->FindCurrentSpellBySpellId(spellId);
+    if (!pSpell)
+        return false;
+
+    return true;
+}
+
 Item* PlayerbotAI::FindItem(uint32 ItemId)
 {
      // list out items in main backpack
@@ -3157,13 +3276,160 @@ void PlayerbotAI::HandleCommand(const std::string& text, Player& fromPlayer)
                   fromPlayer.SetSelection(m_bot->GetGUID());
             }
             PlayerbotChatHandler ch(GetMaster());
-            if (! ch.dropQuest(text.substr(5).c_str()))
+            if (! ch.dropQuest((char*)text.substr(5).c_str()))
                   ch.sysmessage("ERROR: could not drop quest");
             if (oldSelectionGUID)
                   fromPlayer.SetSelection(oldSelectionGUID);
        }
 
+    // Handle all pet related commands here
+    else if (text.size() > 4 && text.substr(0, 4) == "pet ")
+    {
+        Pet * pet = m_bot->GetPet();
+        if (!pet)
+        {
+            SendWhisper("I have no pet.", fromPlayer);
+            return;
+        }
 
+        std::string part = text.substr(4); // Truncate `pet` part
+        std::string subcommand = part.substr(0, part.find(" "));
+        std::string argument;
+        bool argumentFound = false;
+
+        if (part.find(" ") != std::string::npos)
+        {
+            argument = part.substr(part.find(" ") + 1);
+            if (argument.length() > 0)
+                argumentFound = true;
+        }
+
+        if (subcommand == "react" && argumentFound)
+        {
+            if (argument == "a" || argument == "aggressive")
+            {
+                pet->GetCharmInfo()->SetReactState(REACT_AGGRESSIVE);
+            }
+            else if (argument == "d" || argument == "defensive")
+            {
+                pet->GetCharmInfo()->SetReactState(REACT_DEFENSIVE);
+            }
+            else if (argument == "p" || argument == "passive")
+            {
+                pet->GetCharmInfo()->SetReactState(REACT_PASSIVE);
+            }
+        }
+        else if (subcommand == "state" && !argumentFound)
+        {
+            std::string state;
+            switch (pet->GetCharmInfo()->GetReactState())
+            {
+                case REACT_AGGRESSIVE:
+                    SendWhisper("My pet is aggressive.", fromPlayer);
+                    break;
+                case REACT_DEFENSIVE:
+                    SendWhisper("My pet is defensive.", fromPlayer);
+                    break;
+                case REACT_PASSIVE:
+                    SendWhisper("My pet is passive.", fromPlayer);
+            }
+        }
+        else if (subcommand == "cast" && argumentFound)
+        {
+            uint32 spellId = (uint32) atol(argument.c_str());
+
+            if (spellId == 0)
+            {
+                spellId = getPetSpellId(argument.c_str());
+                if (spellId == 0)
+                    extractSpellId(argument, spellId);
+            }
+
+            if (spellId != 0 && pet->HasSpell(spellId))
+            {
+                if(pet->HasAura(spellId))
+                {
+                   pet->RemoveAurasByCasterSpell(spellId,pet->GetGUID());
+                   return;
+                }
+
+                uint64 castOnGuid = fromPlayer.GetSelection();
+                Unit* pTarget = ObjectAccessor::GetUnit(*m_bot, castOnGuid);
+                CastPetSpell(spellId, pTarget);
+            }
+        }
+        else if (subcommand == "toggle" && argumentFound)
+        {
+            uint32 spellId = (uint32) atol(argument.c_str());
+
+            if (spellId == 0)
+            {
+                spellId = getPetSpellId(argument.c_str());
+                if (spellId == 0)
+                    extractSpellId(argument, spellId);
+            }
+
+            if (spellId != 0 && pet->HasSpell(spellId))
+            {
+                PetSpellMap::iterator itr = pet->m_spells.find(spellId);
+                if (itr != pet->m_spells.end())
+                {
+                    if (itr->second.active == ACT_ENABLED)
+                    {
+                        pet->ToggleAutocast(spellId, false);
+                        if (pet->HasAura(spellId))
+                            pet->RemoveAurasByCasterSpell(spellId,pet->GetGUID());
+                    }
+                    else
+                    {
+                        pet->ToggleAutocast(spellId, true);
+                    }
+                }
+            }
+        }
+        else if (subcommand == "spells" && !argumentFound)
+        {
+            int loc = GetMaster()->GetSession()->GetSessionDbcLocale();
+
+            std::ostringstream posOut;
+            std::ostringstream negOut;
+
+            for (PetSpellMap::iterator itr = pet->m_spells.begin(); itr != pet->m_spells.end(); ++itr)
+            {
+                const uint32 spellId = itr->first;
+
+                if (itr->second.state == PETSPELL_REMOVED || IsPassiveSpell(spellId))
+                    continue;
+
+                const SpellEntry* const pSpellInfo = sSpellStore.LookupEntry(spellId);
+                if (!pSpellInfo)
+                    continue;
+
+                std::string color;
+                switch (itr->second.active)
+                {
+                    case ACT_ENABLED:
+                        color = "cff35d22d"; // Some flavor of green
+                        break;
+                    default:
+                        color = "cffffffff";
+                }
+
+                if (IsPositiveSpell(spellId))
+                    posOut << " |" << color << "|Hspell:" << spellId << "|h["
+                           << pSpellInfo->SpellName[loc] << "]|h|r";
+                else
+                    negOut << " |" << color << "|Hspell:" << spellId << "|h["
+                           << pSpellInfo->SpellName[loc] << "]|h|r";
+            }
+
+            ChatHandler ch(&fromPlayer);
+            SendWhisper("Here's my pet's non-attack spells:", fromPlayer);
+            ch.SendSysMessage(posOut.str().c_str());
+            SendWhisper("and here's my pet's attack spells:", fromPlayer);
+            ch.SendSysMessage(negOut.str().c_str());
+        }
+    }
 
     else if (text == "spells")
     {
