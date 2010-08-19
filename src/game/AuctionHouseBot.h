@@ -4,6 +4,7 @@
 #include "World.h"
 #include "Config/Config.h"
 #include "ace/Vector_T.h"
+#include "ObjectMgr.h"
 
 #define AHB_GREY        0
 #define AHB_WHITE       1
