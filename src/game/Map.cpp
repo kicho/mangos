@@ -999,8 +999,7 @@ uint32 Map::GetMaxPlayers() const
 
 uint32 Map::GetMaxResetDelay() const
 {
-    MapDifficulty const* mapDiff = GetMapDifficulty();
-    return mapDiff ? mapDiff->resetTime : 0;
+    return InstanceResetScheduler::GetMaxResetTimeFor(GetMapDifficulty());
 }
 
 inline GridMap *Map::GetGrid(float x, float y)
@@ -1729,15 +1728,16 @@ bool InstanceMap::Add(Player *player)
                     InstanceGroupBind *groupBind = pGroup->GetBoundInstance(this,GetDifficulty());
                     if (playerBind)
                     {
-                        sLog.outError("InstanceMap::Add: player %s(%d) is being put in instance %d,%d,%d,%d,%d,%d but he is in group %d and is bound to instance %d,%d,%d,%d,%d,%d!",
-                            player->GetName(), player->GetGUIDLow(), GetInstanceSave()->GetMapId(), GetInstanceSave()->GetInstanceId(),
+                        sLog.outError("InstanceMap::Add: %s is being put in instance %d,%d,%d,%d,%d,%d but he is in group (Id: %d) and is bound to instance %d,%d,%d,%d,%d,%d!",
+                            player->GetObjectGuid().GetString().c_str(), GetInstanceSave()->GetMapId(), GetInstanceSave()->GetInstanceId(),
                             GetInstanceSave()->GetDifficulty(), GetInstanceSave()->GetPlayerCount(), GetInstanceSave()->GetGroupCount(),
-                            GetInstanceSave()->CanReset(), GUID_LOPART(pGroup->GetLeaderGUID()),
+                            GetInstanceSave()->CanReset(), pGroup->GetId(),
                             playerBind->save->GetMapId(), playerBind->save->GetInstanceId(), playerBind->save->GetDifficulty(),
                             playerBind->save->GetPlayerCount(), playerBind->save->GetGroupCount(), playerBind->save->CanReset());
 
                         if (groupBind)
-                            sLog.outError("InstanceMap::Add: the group is bound to instance %d,%d,%d,%d,%d,%d",
+                            sLog.outError("InstanceMap::Add: the group (Id: %d) is bound to instance %d,%d,%d,%d,%d,%d",
+                                pGroup->GetId(),
                                 groupBind->save->GetMapId(), groupBind->save->GetInstanceId(), groupBind->save->GetDifficulty(),
                                 groupBind->save->GetPlayerCount(), groupBind->save->GetGroupCount(), groupBind->save->CanReset());
                         ASSERT(false);
@@ -1750,10 +1750,10 @@ bool InstanceMap::Add(Player *player)
                         // cannot jump to a different instance without resetting it
                         if (groupBind->save != GetInstanceSave())
                         {
-                            sLog.outError("InstanceMap::Add: player %s(%d) is being put in instance %d,%d,%d but he is in group %d which is bound to instance %d,%d,%d!",
-                                player->GetName(), player->GetGUIDLow(), GetInstanceSave()->GetMapId(),
+                            sLog.outError("InstanceMap::Add: %s is being put in instance %d,%d,%d but he is in group (Id: %d) which is bound to instance %d,%d,%d!",
+                                player->GetObjectGuid().GetString().c_str(), GetInstanceSave()->GetMapId(),
                                 GetInstanceSave()->GetInstanceId(), GetInstanceSave()->GetDifficulty(),
-                                GUID_LOPART(pGroup->GetLeaderGUID()), groupBind->save->GetMapId(),
+                                pGroup->GetId(), groupBind->save->GetMapId(),
                                 groupBind->save->GetInstanceId(), groupBind->save->GetDifficulty());
 
                             if (GetInstanceSave())
@@ -1829,10 +1829,16 @@ void BattleGroundMap::Update(const uint32& diff)
 void InstanceMap::Remove(Player *player, bool remove)
 {
     DETAIL_LOG("MAP: Removing player '%s' from instance '%u' of map '%s' before relocating to other map", player->GetName(), GetInstanceId(), GetMapName());
+
     //if last player set unload timer
     if(!m_unloadTimer && m_mapRefManager.getSize() == 1)
         m_unloadTimer = m_unloadWhenEmpty ? MIN_UNLOAD_DELAY : std::max(sWorld.getConfig(CONFIG_UINT32_INSTANCE_UNLOAD_DELAY), (uint32)MIN_UNLOAD_DELAY);
+
+    if (i_data)
+        i_data->OnPlayerLeave(player);
+
     Map::Remove(player, remove);
+
     // for normal instances schedule the reset after all players have left
     SetResetSchedule(true);
 }
@@ -1918,7 +1924,7 @@ bool InstanceMap::Reset(uint8 method)
 
 void InstanceMap::PermBindAllPlayers(Player *player)
 {
-    if(!IsDungeon())
+    if (!IsDungeon())
         return;
 
     Group *group = player->GetGroup();
@@ -1929,7 +1935,7 @@ void InstanceMap::PermBindAllPlayers(Player *player)
         // players inside an instance cannot be bound to other instances
         // some players may already be permanently bound, in this case nothing happens
         InstancePlayerBind *bind = plr->GetBoundInstance(GetId(), GetDifficulty());
-        if(!bind || !bind->perm)
+        if (!bind || !bind->perm)
         {
             plr->BindToInstance(GetInstanceSave(), true);
             WorldPacket data(SMSG_INSTANCE_SAVE_CREATED, 4);
@@ -1938,7 +1944,7 @@ void InstanceMap::PermBindAllPlayers(Player *player)
         }
 
         // if the leader is not in the instance the group will not get a perm bind
-        if(group && group->GetLeaderGUID() == plr->GetGUID())
+        if (group && group->GetLeaderGuid() == plr->GetObjectGuid())
             group->BindToInstance(GetInstanceSave(), true);
     }
 }
@@ -2419,7 +2425,7 @@ void Map::ScriptsProcess()
                 }
                 else
                 {
-                    pSource->KilledMonsterCredit(step.script->datalong, 0);
+                    pSource->KilledMonsterCredit(step.script->datalong);
                 }
 
                 break;

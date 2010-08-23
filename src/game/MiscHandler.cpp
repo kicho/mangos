@@ -26,7 +26,6 @@
 #include "Player.h"
 #include "World.h"
 #include "ObjectMgr.h"
-#include "ObjectGuid.h"
 #include "WorldSession.h"
 #include "Auth/BigNumber.h"
 #include "Auth/Sha1.h"
@@ -491,7 +490,8 @@ void WorldSession::HandleAddFriendOpcodeCallBack(QueryResult *result, uint32 acc
     if(!result)
         return;
 
-    uint64 friendGuid = MAKE_NEW_GUID((*result)[0].GetUInt32(), 0, HIGHGUID_PLAYER);
+    uint32 friendLowGuid = (*result)[0].GetUInt32();
+    ObjectGuid friendGuid = ObjectGuid(HIGHGUID_PLAYER, friendLowGuid);
     uint32 team = Player::TeamForRace((*result)[1].GetUInt8());
 
     delete result;
@@ -501,13 +501,13 @@ void WorldSession::HandleAddFriendOpcodeCallBack(QueryResult *result, uint32 acc
         return;
 
     FriendsResult friendResult = FRIEND_NOT_FOUND;
-    if(friendGuid)
+    if (!friendGuid.IsEmpty())
     {
-        if(friendGuid==session->GetPlayer()->GetGUID())
+        if (friendGuid == session->GetPlayer()->GetObjectGuid())
             friendResult = FRIEND_SELF;
         else if(session->GetPlayer()->GetTeam() != team && !sWorld.getConfig(CONFIG_BOOL_ALLOW_TWO_SIDE_ADD_FRIEND) && session->GetSecurity() < SEC_MODERATOR)
             friendResult = FRIEND_ENEMY;
-        else if(session->GetPlayer()->GetSocial()->HasFriend(GUID_LOPART(friendGuid)))
+        else if(session->GetPlayer()->GetSocial()->HasFriend(friendLowGuid))
             friendResult = FRIEND_ALREADY;
         else
         {
@@ -517,17 +517,17 @@ void WorldSession::HandleAddFriendOpcodeCallBack(QueryResult *result, uint32 acc
             else
                 friendResult = FRIEND_ADDED_OFFLINE;
 
-            if(!session->GetPlayer()->GetSocial()->AddToSocialList(GUID_LOPART(friendGuid), false))
+            if(!session->GetPlayer()->GetSocial()->AddToSocialList(friendLowGuid, false))
             {
                 friendResult = FRIEND_LIST_FULL;
                 DEBUG_LOG( "WORLD: %s's friend list is full.", session->GetPlayer()->GetName());
             }
 
-            session->GetPlayer()->GetSocial()->SetFriendNote(GUID_LOPART(friendGuid), friendNote);
+            session->GetPlayer()->GetSocial()->SetFriendNote(friendLowGuid, friendNote);
         }
     }
 
-    sSocialMgr.SendFriendStatus(session->GetPlayer(), friendResult, GUID_LOPART(friendGuid), false);
+    sSocialMgr.SendFriendStatus(session->GetPlayer(), friendResult, friendLowGuid, false);
 
     DEBUG_LOG( "WORLD: Sent (SMSG_FRIEND_STATUS)" );
 }
@@ -571,7 +571,8 @@ void WorldSession::HandleAddIgnoreOpcodeCallBack(QueryResult *result, uint32 acc
     if(!result)
         return;
 
-    uint64 IgnoreGuid = MAKE_NEW_GUID((*result)[0].GetUInt32(), 0, HIGHGUID_PLAYER);
+    uint32 ignoreLowGuid = (*result)[0].GetUInt32();
+    ObjectGuid ignoreGuid = ObjectGuid(HIGHGUID_PLAYER, ignoreLowGuid);
 
     delete result;
 
@@ -580,23 +581,23 @@ void WorldSession::HandleAddIgnoreOpcodeCallBack(QueryResult *result, uint32 acc
         return;
 
     FriendsResult ignoreResult = FRIEND_IGNORE_NOT_FOUND;
-    if(IgnoreGuid)
+    if (!ignoreGuid.IsEmpty())
     {
-        if(IgnoreGuid == session->GetPlayer()->GetGUID())   //not add yourself
+        if (ignoreGuid == session->GetPlayer()->GetObjectGuid())
             ignoreResult = FRIEND_IGNORE_SELF;
-        else if( session->GetPlayer()->GetSocial()->HasIgnore(GUID_LOPART(IgnoreGuid)) )
+        else if (session->GetPlayer()->GetSocial()->HasIgnore(ignoreLowGuid))
             ignoreResult = FRIEND_IGNORE_ALREADY;
         else
         {
             ignoreResult = FRIEND_IGNORE_ADDED;
 
             // ignore list full
-            if(!session->GetPlayer()->GetSocial()->AddToSocialList(GUID_LOPART(IgnoreGuid), true))
+            if(!session->GetPlayer()->GetSocial()->AddToSocialList(ignoreLowGuid, true))
                 ignoreResult = FRIEND_IGNORE_FULL;
         }
     }
 
-    sSocialMgr.SendFriendStatus(session->GetPlayer(), ignoreResult, GUID_LOPART(IgnoreGuid), false);
+    sSocialMgr.SendFriendStatus(session->GetPlayer(), ignoreResult, ignoreLowGuid, false);
 
     DEBUG_LOG( "WORLD: Sent (SMSG_FRIEND_STATUS)" );
 }
@@ -927,7 +928,7 @@ void WorldSession::HandleRequestAccountData(WorldPacket& recv_data)
     dest.resize(destSize);
 
     WorldPacket data(SMSG_UPDATE_ACCOUNT_DATA, 8+4+4+4+destSize);
-    data << uint64(_player ? _player->GetGUID() : 0);       // player guid
+    data << (_player ? _player->GetObjectGuid() : ObjectGuid());// player guid
     data << uint32(type);                                   // type (0-7)
     data << uint32(adata->Time);                            // unix time
     data << uint32(size);                                   // decompressed length
@@ -1150,7 +1151,7 @@ void WorldSession::HandleInspectHonorStatsOpcode(WorldPacket& recv_data)
     }
 
     WorldPacket data(MSG_INSPECT_HONOR_STATS, 8+1+4*4);
-    data << uint64(player->GetGUID());
+    data << player->GetObjectGuid();
     data << uint8(player->GetUInt32Value(PLAYER_FIELD_HONOR_CURRENCY));
     data << uint32(player->GetUInt32Value(PLAYER_FIELD_KILLS));
     data << uint32(player->GetUInt32Value(PLAYER_FIELD_TODAY_CONTRIBUTION));
@@ -1379,9 +1380,9 @@ void WorldSession::HandleResetInstancesOpcode( WorldPacket & /*recv_data*/ )
 {
     DEBUG_LOG("WORLD: CMSG_RESET_INSTANCES");
 
-    if(Group *pGroup = _player->GetGroup())
+    if (Group *pGroup = _player->GetGroup())
     {
-        if(pGroup->IsLeader(_player->GetGUID()))
+        if (pGroup->IsLeader(_player->GetObjectGuid()))
         {
             pGroup->ResetInstances(INSTANCE_RESET_ALL, false, _player);
             pGroup->ResetInstances(INSTANCE_RESET_ALL, true,_player);
@@ -1418,12 +1419,12 @@ void WorldSession::HandleSetDungeonDifficultyOpcode( WorldPacket & recv_data )
         return;
     }
 
-    if(_player->getLevel() < LEVELREQUIREMENT_HEROIC)
+    if (_player->getLevel() < LEVELREQUIREMENT_HEROIC)
         return;
 
-    if(Group *pGroup = _player->GetGroup())
+    if (Group *pGroup = _player->GetGroup())
     {
-        if(pGroup->IsLeader(_player->GetGUID()))
+        if (pGroup->IsLeader(_player->GetObjectGuid()))
         {
             // the difficulty is set even if the instances can't be reset
             //_player->SendDungeonDifficulty(true);
@@ -1462,12 +1463,12 @@ void WorldSession::HandleSetRaidDifficultyOpcode( WorldPacket & recv_data )
         return;
     }
 
-    if(_player->getLevel() < LEVELREQUIREMENT_HEROIC)
+    if (_player->getLevel() < LEVELREQUIREMENT_HEROIC)
         return;
 
-    if(Group *pGroup = _player->GetGroup())
+    if (Group *pGroup = _player->GetGroup())
     {
-        if(pGroup->IsLeader(_player->GetGUID()))
+        if (pGroup->IsLeader(_player->GetObjectGuid()))
         {
             // the difficulty is set even if the instances can't be reset
             //_player->SendDungeonDifficulty(true);

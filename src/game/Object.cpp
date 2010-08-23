@@ -111,13 +111,13 @@ void Object::_InitValues()
     m_objectUpdated = false;
 }
 
-void Object::_Create( uint32 guidlow, uint32 entry, HighGuid guidhigh )
+void Object::_Create(uint32 guidlow, uint32 entry, HighGuid guidhigh)
 {
     if(!m_uint32Values)
         _InitValues();
 
-    uint64 guid = MAKE_NEW_GUID(guidlow, entry, guidhigh);
-    SetUInt64Value(OBJECT_FIELD_GUID, guid);
+    ObjectGuid guid = ObjectGuid(guidhigh, entry, guidlow);
+    SetGuidValue(OBJECT_FIELD_GUID, guid);
     SetUInt32Value(OBJECT_FIELD_TYPE, m_objectType);
     m_PackGUID.Set(guid);
 }
@@ -240,7 +240,7 @@ void Object::DestroyForPlayer( Player *target, bool anim ) const
     ASSERT(target);
 
     WorldPacket data(SMSG_DESTROY_OBJECT, 8);
-    data << uint64(GetGUID());
+    data << GetObjectGuid();
     data << uint8(anim ? 1 : 0);                            // WotLK (bool), may be despawn animation
     target->GetSession()->SendPacket(&data);
 }
@@ -1934,7 +1934,7 @@ void WorldObject::PlayDistanceSound( uint32 sound_id, Player* target /*= NULL*/ 
 {
     WorldPacket data(SMSG_PLAY_OBJECT_SOUND,4+8);
     data << uint32(sound_id);
-    data << uint64(GetGUID());
+    data << GetObjectGuid();
     if (target)
         target->SendDirectMessage( &data );
     else

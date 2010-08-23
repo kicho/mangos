@@ -126,6 +126,19 @@ bool InstanceSave::UnloadIfEmpty()
 
 //== InstanceResetScheduler functions ======================
 
+uint32 InstanceResetScheduler::GetMaxResetTimeFor(MapDifficulty const* mapDiff)
+{
+    if (!mapDiff || !mapDiff->resetTime)
+        return 0;
+
+    uint32 delay = uint32(mapDiff->resetTime / DAY * sWorld.getConfig(CONFIG_FLOAT_RATE_INSTANCE_RESET_TIME)) * DAY;
+
+    if (delay < DAY)                                        // the reset_delay must be at least one day
+        delay = DAY;
+
+    return delay;
+}
+
 void InstanceResetScheduler::LoadResetTimes()
 {
     time_t now = time(NULL);
@@ -204,7 +217,6 @@ void InstanceResetScheduler::LoadResetTimes()
 
             // update the reset time if the hour in the configs changes
             uint64 newresettime = (oldresettime / DAY) * DAY + diff;
-			newresettime = newresettime >= today + 8*DAY ? today + 6*DAY + diff : newresettime;
             if(oldresettime != newresettime)
                 CharacterDatabase.DirectPExecute("UPDATE instance_reset SET resettime = '"UI64FMTD"' WHERE mapid = '%u' AND difficulty = '%u'", newresettime, mapid, difficulty);
 
@@ -230,15 +242,7 @@ void InstanceResetScheduler::LoadResetTimes()
         if (!mapDiff->resetTime)
             continue;
 
-        // the reset_delay must be at least one day
-        uint32 period =  uint32(mapDiff->resetTime / DAY * sWorld.getConfig(CONFIG_FLOAT_RATE_INSTANCE_RESET_TIME)) * DAY;
-        if (period < DAY)
-            period = DAY;
-
-		// the reset_delay must be not more 7 days
-		if (period > 7*DAY)
-			period = 7*DAY;
-
+        uint32 period = GetMaxResetTimeFor(mapDiff);
         time_t t = GetResetTimeFor(mapid,difficulty);
         if(!t)
         {
@@ -643,7 +647,7 @@ void InstanceSaveManager::_ResetOrWarnAll(uint32 mapid, Difficulty difficulty, b
 
         // calculate the next reset time
         uint32 diff = sWorld.getConfig(CONFIG_UINT32_INSTANCE_RESET_TIME_HOUR) * HOUR;
-        uint32 period = mapDiff->resetTime * DAY;
+        uint32 period = InstanceResetScheduler::GetMaxResetTimeFor(mapDiff);
         time_t next_reset = ((now + timeLeft + MINUTE) / DAY * DAY) + period + diff;
         // update it in the DB
         CharacterDatabase.PExecute("UPDATE instance_reset SET resettime = '"UI64FMTD"' WHERE mapid = '%d' AND difficulty = '%d'", (uint64)next_reset, mapid, difficulty);
