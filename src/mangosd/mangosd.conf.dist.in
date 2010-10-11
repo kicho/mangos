@@ -1509,13 +1509,9 @@ Network.KickOnBadPacket = 0
 #        Enable/Disable the part of AHBot that buys items from players
 #    Default 0 (disabled)
 #
-#    AuctionHouseBot.Account
-#        Is the account number (in realmd->account table) of the player you want to run as the auction bot.
-#    Default: 0 (Auction House Bot disabled)
-#
-#    AuctionHouseBot.Character
-#        Is the GUID (in characters->characters table) of the player you want to run as the auction bot.
-#    Default: 0 (Auction House Bot disabled)
+#    AuctionHouseBot.Name
+#        If you want show other name in place of "AHBot" to auction house, just type it between the quote
+#    Default: "" ("AHBot" name)
 #
 #    AuctionHouseBot.Items.Vendor
 #        Include items that can be bought from vendors.
@@ -1580,10 +1576,9 @@ Network.KickOnBadPacket = 0
 #
 ###################################################################################################################
 
-AuctionHouseBot.Seller.Enabled = 0
+AuctionHouseBot.Seller.Enabled = 1
 AuctionHouseBot.Buyer.Enabled = 0
-AuctionHouseBot.Account = 0
-AuctionHouseBot.Character = 0
+AuctionHouseBot.Name = "Kicho"
 
 AuctionHouseBot.Items.Vendor = 0
 AuctionHouseBot.Items.Loot = 1

@@ -184,9 +184,7 @@ enum eConfigUInt32Values
     CONFIG_UINT32_CHARDELETE_KEEP_DAYS,
     CONFIG_UINT32_CHARDELETE_METHOD,
     CONFIG_UINT32_CHARDELETE_MIN_LEVEL,
-	// AHBOT
-    CONFIG_UINT32_AHBOT_ACCOUNT_ID,
-    CONFIG_UINT32_AHBOT_CHARACTER_ID,
+    // AHBot
     CONFIG_UINT32_AHBOT_ITEMS_CYCLE,
     CONFIG_UINT32_AHBOT_ITEM_MIN_ITEM_LEVEL,
     CONFIG_UINT32_AHBOT_ITEM_MAX_ITEM_LEVEL,
@@ -610,6 +608,10 @@ class World
         void SetScriptsVersion(char const* version) { m_ScriptsVersion = version ? version : "unknown scripting library"; }
         char const* GetScriptsVersion() { return m_ScriptsVersion.c_str(); }
 
+        //Added By AHBot
+        void SetAHBotName(const std::string& AHBotName) { if (AHBotName.size()>0) m_AHBotName = AHBotName; else m_AHBotName="AHBot"; }
+        const char* GetAHBotName() const { return m_AHBotName.c_str(); }
+
     protected:
         void _UpdateGameTime();
         // callback for UpdateRealmCharacters
@@ -701,6 +703,9 @@ class World
         std::string m_DBVersion;
         std::string m_CreatureEventAIVersion;
         std::string m_ScriptsVersion;
+
+        //Added By AHBot
+        std::string m_AHBotName;
 };
 
 extern uint32 realmID;

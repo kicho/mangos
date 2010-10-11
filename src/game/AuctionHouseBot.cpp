@@ -1011,7 +1011,14 @@ void AuctionHouseBot::Initialize()
         sLog.outString("loaded %d orange items", orangeItemsBin.size());
         sLog.outString("loaded %d yellow items", yellowItemsBin.size());
     }
+<<<<<<< HEAD
     sLog.outString("[Auction House Bot] loaded successfully.");
+=======
+    sLog.outString("AuctionHouseBot> [AHBot-x003] is now loaded");
+    sLog.outString("AuctionHouseBot> updated by Cyberium from Xeross git");
+    sLog.outString("AuctionHouseBot> (Original by Naicisum, ChrisK, Paradox)");
+    sLog.outString("AuctionHouseBot> Includes AHBuyer by Kerbe and Paradox");
+>>>>>>> 4195cbcafbd0f27fba9ffe3a3650559bfe42022c
 }
 
 void AuctionHouseBot::Commands(uint32 command, uint32 ahMapID, uint32 col, char* args)
