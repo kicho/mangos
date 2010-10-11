@@ -2,9 +2,9 @@
 #define AUCTION_HOUSE_BOT_H
 
 #include "World.h"
-#include "Player.h"
 #include "Config/Config.h"
 #include "ace/Vector_T.h"
+#include "ObjectMgr.h"
 
 #define AHB_GREY        0
 #define AHB_WHITE       1
@@ -943,10 +943,10 @@ private:
     time_t _lastrun_n;
 
     uint32 ItemsPerCycle;
-
+    ObjectGuid m_FakeGuid;
     inline uint32 minValue(uint32 a, uint32 b) { return a <= b ? a : b; };
-    void addNewAuctions(Player *AHBplayer, AHBConfig *config);
-    void addNewAuctionBuyerBotBid(Player *AHBplayer, AHBConfig *config, WorldSession *session);
+    void addNewAuctions(AHBConfig *config);
+    void addNewAuctionBuyerBotBid(AHBConfig *config, WorldSession *session);
 
 public:
     AuctionHouseBot();
@@ -956,7 +956,7 @@ public:
     void LoadDbConfig();
     void LoadValues(AHBConfig*);
     void Commands(uint32, uint32, uint32, char*);
-    uint32 GetAHBplayerGUID() { return sWorld.getConfig(CONFIG_UINT32_AHBOT_CHARACTER_ID); };
+    ObjectGuid GetAHBplayerGUID() { return m_FakeGuid; };
 };
 
 #define auctionbot MaNGOS::Singleton<AuctionHouseBot>::Instance()

@@ -1830,7 +1830,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     if( m_caster->GetTypeId() == TYPEID_PLAYER && unitTarget->GetTypeId() != TYPEID_PLAYER && unitTarget->GetEntry() == 26321 )
                     {
                         unitTarget->MonsterTextEmote("The Lothalor Acient gives you its thanks.", 0);
-                        ((Player*)m_caster)->KilledMonsterCredit(26321, 0);
+                        ((Player*)m_caster)->KilledMonsterCredit(26321);
                     }
                     return;
                 }
@@ -1843,7 +1843,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 case 45607: // Q: Kaganishu
                 {
                     if(m_caster->GetTypeId() == TYPEID_PLAYER)
-                        ((Player*)m_caster)->KilledMonsterCredit(25425, 0);
+                        ((Player*)m_caster)->KilledMonsterCredit(25425);
                     return;
                 }
                 case 67019:                                 // Flask of the North

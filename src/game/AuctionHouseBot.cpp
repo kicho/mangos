@@ -20,7 +20,7 @@ AuctionHouseBot::~AuctionHouseBot()
 
 }
 
-void AuctionHouseBot::addNewAuctions(Player *AHBplayer, AHBConfig *config)
+void AuctionHouseBot::addNewAuctions(AHBConfig *config)
 {
     if (!sWorld.getConfig(CONFIG_BOOL_AHBOT_SELLER_ENABLED))
          return;
@@ -31,24 +31,8 @@ void AuctionHouseBot::addNewAuctions(Player *AHBplayer, AHBConfig *config)
     uint32 minItems = config->GetMinItems();
     uint32 maxItems = config->GetMaxItems();
     uint32 auctions = auctionHouse->Getcount();
-    uint32 AuctioneerGUID = 0;
-    switch (config->GetAHID()){
-        case 2:
-            AuctioneerGUID = 79707; //Human in stormwind.
-            break;
-        case 6:
-            AuctioneerGUID = 4656; //orc in Orgrimmar
-            break;
-        case 7:
-            AuctioneerGUID = 23442; //goblin in GZ
-            break;
-        default:
-            sLog.outError("GetAHID() - Default switch reached");
-            AuctioneerGUID = 23442; //default to neutral 7
-            break;
-    }
 
-    if (auctions >= minItems)
+	if (auctions >= minItems)
         return;
 
     if (auctions <= maxItems)
@@ -58,6 +42,7 @@ void AuctionHouseBot::addNewAuctions(Player *AHBplayer, AHBConfig *config)
         else
             items = (maxItems - auctions);
     }
+
     uint32 greyTGcount = config->GetPercents(AHB_GREY_TG);
     uint32 whiteTGcount = config->GetPercents(AHB_WHITE_TG);
     uint32 greenTGcount = config->GetPercents(AHB_GREEN_TG);
@@ -92,7 +77,6 @@ void AuctionHouseBot::addNewAuctions(Player *AHBplayer, AHBConfig *config)
     uint32 purpleItems = 0;
     uint32 orangeItems = 0;
     uint32 yellowItems = 0;
-
     for (AuctionHouseObject::AuctionEntryMap::const_iterator itr = auctionHouse->GetAuctionsBegin();itr != auctionHouse->GetAuctionsEnd();++itr)
     {
         AuctionEntry *Aentry = itr->second;
@@ -150,7 +134,6 @@ void AuctionHouseBot::addNewAuctions(Player *AHBplayer, AHBConfig *config)
             }
         }
     }
-
     // only insert a few at a time, so as not to peg the processor
     for (uint32 cnt = 1;cnt <= items;cnt++)
     {
@@ -266,7 +249,6 @@ void AuctionHouseBot::addNewAuctions(Player *AHBplayer, AHBConfig *config)
 
             ++loopBreaker;
         }
-
         if (itemID == 0)
         {
             if (debug_Out)
@@ -332,27 +314,23 @@ void AuctionHouseBot::addNewAuctions(Player *AHBplayer, AHBConfig *config)
             continue;
 
 
-        Item* item = Item::CreateItem(itemID, 1, AHBplayer);
-        item->AddToUpdateQueueOf(AHBplayer);
+        Item* item = Item::CreateItem(itemID, 1);
         if (item == NULL)
         {
             sLog.outString("AuctionHouseBot> Item::CreateItem() returned NULL");
             break;
         }
-
         uint32 randomPropertyId = Item::GenerateItemRandomPropertyId(itemID);
         if (randomPropertyId != 0)
-            item->SetItemRandomProperties(randomPropertyId);
+            item->SetItemRandomPropertiesNoUpdate(randomPropertyId);
 
         uint32 buyoutPrice;
         uint32 bidPrice = 0;
         uint32 stackCount = urand(1, item->GetMaxStackCount());
-
         if(sWorld.getConfig(CONFIG_BOOL_AHBOT_BUYPRICE_SELLER))
             buyoutPrice  = prototype->BuyPrice * item->GetCount();
         else
             buyoutPrice  = prototype->SellPrice * item->GetCount();
-
         switch (prototype->Quality)
         {
         case 0:
@@ -427,13 +405,12 @@ void AuctionHouseBot::addNewAuctions(Player *AHBplayer, AHBConfig *config)
             break;
         }
 
-        item->SetCount(stackCount);
-
+		item->SetCount(stackCount);
         AuctionEntry* auctionEntry = new AuctionEntry;
         auctionEntry->Id = sObjectMgr.GenerateAuctionID();
         auctionEntry->item_guidlow = item->GetGUIDLow();
         auctionEntry->item_template = item->GetEntry();
-        auctionEntry->owner = AHBplayer->GetGUIDLow();
+        auctionEntry->owner = GetAHBplayerGUID().GetRawValue();
         auctionEntry->startbid = bidPrice;
         auctionEntry->buyout = buyoutPrice;
         auctionEntry->bidder = 0;
@@ -442,14 +419,13 @@ void AuctionHouseBot::addNewAuctions(Player *AHBplayer, AHBConfig *config)
         auctionEntry->expire_time = (time_t) (urand(config->GetMinTime(), config->GetMaxTime()) * 60 * 60 + time(NULL));
         auctionEntry->auctionHouseEntry = ahEntry;
         item->SaveToDB();
-        item->RemoveFromUpdateQueueOf(AHBplayer);
         sAuctionMgr.AddAItem(item);
         auctionHouse->AddAuction(auctionEntry);
         auctionEntry->SaveToDB();
     }
 }
 
-void AuctionHouseBot::addNewAuctionBuyerBotBid(Player *AHBplayer, AHBConfig *config, WorldSession *session)
+void AuctionHouseBot::addNewAuctionBuyerBotBid(AHBConfig *config, WorldSession *session)
 {
     if (!sWorld.getConfig(CONFIG_BOOL_AHBOT_BUYER_ENABLED))
         return;
@@ -463,12 +439,12 @@ void AuctionHouseBot::addNewAuctionBuyerBotBid(Player *AHBplayer, AHBConfig *con
     {
         // Check if the auction is ours
         // if it is, we skip this iteration.
-        if (itr->second->owner == sWorld.getConfig(CONFIG_UINT32_AHBOT_CHARACTER_ID))
+        if (itr->second->owner == std::numeric_limits< int >::max())
         {
             continue;
         }
         // Check that we haven't bidded in this auction already.
-        if (itr->second->bidder != sWorld.getConfig(CONFIG_UINT32_AHBOT_CHARACTER_ID))
+        if (itr->second->bidder != std::numeric_limits< int >::max())
         {
             uint32 tmpdata = itr->second->Id;
             possibleBids.push_back(tmpdata);
@@ -700,7 +676,7 @@ void AuctionHouseBot::addNewAuctionBuyerBotBid(Player *AHBplayer, AHBConfig *con
 
             if (auction->bidder > 0)
             {
-                if (auction->bidder == AHBplayer->GetGUIDLow())
+                if (auction->bidder == GetAHBplayerGUID().GetRawValue())
                 {
                     //pl->ModifyMoney(-int32(price - auction->bid));
                 }
@@ -712,7 +688,7 @@ void AuctionHouseBot::addNewAuctionBuyerBotBid(Player *AHBplayer, AHBConfig *con
                 }
             }
 
-            auction->bidder = AHBplayer->GetGUIDLow();
+            auction->bidder = GetAHBplayerGUID().GetRawValue();
             auction->bid = bidprice;
 
             // Saving auction into database
@@ -721,7 +697,7 @@ void AuctionHouseBot::addNewAuctionBuyerBotBid(Player *AHBplayer, AHBConfig *con
         else
         {
             //buyout
-            if (AHBplayer->GetGUIDLow() == auction->bidder)
+            if (GetAHBplayerGUID().GetRawValue() == auction->bidder)
             {
                 //pl->ModifyMoney(-int32(auction->buyout - auction->bid));
             }
@@ -733,7 +709,7 @@ void AuctionHouseBot::addNewAuctionBuyerBotBid(Player *AHBplayer, AHBConfig *con
                     session->SendAuctionOutbiddedMail(auction, auction->buyout);
                 }
             }
-            auction->bidder = AHBplayer->GetGUIDLow();
+            auction->bidder = GetAHBplayerGUID().GetRawValue();
             auction->bid = auction->buyout;
 
             // Send mails to buyer & seller
@@ -756,37 +732,31 @@ void AuctionHouseBot::Update()
     if ((!sWorld.getConfig(CONFIG_BOOL_AHBOT_SELLER_ENABLED)) && (!sWorld.getConfig(CONFIG_BOOL_AHBOT_BUYER_ENABLED)))
         return;
 
-    WorldSession _session(sWorld.getConfig(CONFIG_UINT32_AHBOT_ACCOUNT_ID), NULL, SEC_PLAYER, true, 0, LOCALE_enUS);
-
-    Player _AHBplayer(&_session);
-    _AHBplayer.Initialize(sWorld.getConfig(CONFIG_UINT32_AHBOT_CHARACTER_ID));
-    ObjectAccessor::Instance().AddObject(&_AHBplayer);
+    WorldSession _session(0, NULL, SEC_PLAYER, true, 0, LOCALE_enUS);
 
     // Add New Bids
     if (!sWorld.getConfig(CONFIG_BOOL_ALLOW_TWO_SIDE_INTERACTION_AUCTION))
     {
-        addNewAuctions(&_AHBplayer, &AllianceConfig);
+        addNewAuctions(&AllianceConfig);
         if (((_newrun - _lastrun_a) > (AllianceConfig.GetBiddingInterval() * 60)) && (AllianceConfig.GetBidsPerInterval() > 0))
         {
-            addNewAuctionBuyerBotBid(&_AHBplayer, &AllianceConfig, &_session);
+            addNewAuctionBuyerBotBid(&AllianceConfig, &_session);
             _lastrun_a = _newrun;
         }
 
-        addNewAuctions(&_AHBplayer, &HordeConfig);
+        addNewAuctions(&HordeConfig);
         if (((_newrun - _lastrun_h) > (HordeConfig.GetBiddingInterval() *60)) && (HordeConfig.GetBidsPerInterval() > 0))
         {
-            addNewAuctionBuyerBotBid(&_AHBplayer, &HordeConfig, &_session);
+            addNewAuctionBuyerBotBid(&HordeConfig, &_session);
             _lastrun_h = _newrun;
         }
     }
-    addNewAuctions(&_AHBplayer, &NeutralConfig);
+    addNewAuctions(&NeutralConfig);
     if (((_newrun - _lastrun_n) > (NeutralConfig.GetBiddingInterval() * 60)) && (NeutralConfig.GetBidsPerInterval() > 0))
     {
-        addNewAuctionBuyerBotBid(&_AHBplayer, &NeutralConfig, &_session);
+        addNewAuctionBuyerBotBid(&NeutralConfig, &_session);
         _lastrun_n = _newrun;
     }
-
-    ObjectAccessor::Instance().RemoveObject(&_AHBplayer);
 }
 
 void AuctionHouseBot::LoadDbConfig()
@@ -807,6 +777,7 @@ void AuctionHouseBot::Initialize()
 
     if (sWorld.getConfig(CONFIG_BOOL_AHBOT_SELLER_ENABLED))
     {
+        m_FakeGuid.Set(std::numeric_limits< int >::max());
         QueryResult* results = (QueryResult*) NULL;
         char npcQuery[] = "SELECT distinct `item` FROM `npc_vendor`";
         results = WorldDatabase.PQuery(npcQuery);
@@ -1018,8 +989,10 @@ void AuctionHouseBot::Initialize()
             (yellowItemsBin.size() == 0)
             )
         {
-            sLog.outString("AuctionHouseBot> No items");
+            sLog.outString("AuctionHouseBot> Error, no items from xxxx_loot_template tables.");
+            sLog.outString("AuctionHouseBot> AHBot is disabled!");
             sWorld.setConfig(CONFIG_BOOL_AHBOT_SELLER_ENABLED, false);
+            return;
         }
 
         sLog.outString("========AuctionHouseBot========");
@@ -1038,8 +1011,9 @@ void AuctionHouseBot::Initialize()
         sLog.outString("loaded %d orange items", orangeItemsBin.size());
         sLog.outString("loaded %d yellow items", yellowItemsBin.size());
     }
-    sLog.outString("AuctionHouseBot> [AHBot-x002] is now loaded");
-    sLog.outString("AuctionHouseBot> updated by Xeross (Original by Naicisum, ChrisK, Paradox)");
+    sLog.outString("AuctionHouseBot> [AHBot-x003] is now loaded");
+    sLog.outString("AuctionHouseBot> updated by Cyberium from Xeross git");
+    sLog.outString("AuctionHouseBot> (Original by Naicisum, ChrisK, Paradox)");
     sLog.outString("AuctionHouseBot> Includes AHBuyer by Kerbe and Paradox");
 }
 
@@ -1097,7 +1071,7 @@ void AuctionHouseBot::Commands(uint32 command, uint32 ahMapID, uint32 col, char*
 
             while (itr != auctionHouse->GetAuctionsEnd())
             {
-                if (itr->second->owner == sWorld.getConfig(CONFIG_UINT32_AHBOT_CHARACTER_ID))
+                if (itr->second->owner == GetAHBplayerGUID().GetRawValue())
                     itr->second->expire_time = sWorld.GetGameTime();
 
                 ++itr;
@@ -1484,9 +1458,4 @@ void AuctionHouseBot::LoadValues(AHBConfig *config)
             sLog.outError("buyerBidsPerInterval = %u", config->GetBidsPerInterval());
         }
     }
-}
-
-void Player::Initialize(uint32 guid )
-{
-    Object::_Create( guid, 0, HIGHGUID_PLAYER );
 }

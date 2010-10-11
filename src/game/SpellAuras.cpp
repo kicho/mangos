@@ -2506,7 +2506,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     {
                         if (Unit* caster = GetCaster())
                             if(caster->GetTypeId() == TYPEID_PLAYER )
-                                ((Player*)caster)->KilledMonsterCredit( 24235, 0);
+								((Player*)caster)->KilledMonsterCredit(24235);
                     }
                     else 
                     {
@@ -2519,7 +2519,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     {
                         if (Unit* caster = GetCaster())
                             if( caster->GetTypeId() == TYPEID_PLAYER )
-                                ((Player*)caster)->KilledMonsterCredit( 30546, 0);
+								((Player*)caster)->KilledMonsterCredit(30546);
                     }
                     else 
                     {
@@ -9203,10 +9203,17 @@ void Aura::HandleAuraInitializeImages(bool Apply, bool Real)
 
     if (!Real || !Apply || !target || target->GetTypeId() != TYPEID_UNIT)
         return;
+
     Unit* caster = GetCaster();
-    Unit* creator = Unit::GetUnit(*target,target->GetCreatorGUID());
+	if (!caster)
+		return;
+
+	Unit *creator = ObjectAccessor::GetUnit(*target, target->GetCreatorGUID());
+	if (!creator)
+        creator = caster;
+
     Creature* pImmage = (Creature*)target;
-    if (!creator || !caster || creator != caster || pImmage->isPet())
+    if (creator != caster || pImmage->isPet())
         return;
 
     // set stats and visual

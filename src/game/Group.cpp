@@ -1843,25 +1843,25 @@ void Group::BroadcastGroupUpdate(void)
                 p_pet->ForceValuesUpdateAtIndex(UNIT_FIELD_FACTIONTEMPLATE);
                 DEBUG_LOG("-- Forced group value update for '%s' pet '%s'", pp->GetName(), pp->GetPet()->GetName());
             }
-                if(Unit *totem = Unit::GetUnit(*pp, pp->GetTotemGUID(TOTEM_SLOT_FIRE)))
+				if(Unit *totem = ObjectAccessor::GetUnit(*pp, pp->GetTotemGUID(TOTEM_SLOT_FIRE)))
                 {
                     totem->ForceValuesUpdateAtIndex(UNIT_FIELD_BYTES_2);
                     totem->ForceValuesUpdateAtIndex(UNIT_FIELD_FACTIONTEMPLATE);
                     DEBUG_LOG("-- Forced group value update for '%s' totem #%u", pp->GetName(), TOTEM_SLOT_FIRE);
                 }
-                if(Unit *totem = Unit::GetUnit(*pp, pp->GetTotemGUID(TOTEM_SLOT_EARTH)))
+				if(Unit *totem = ObjectAccessor::GetUnit(*pp, pp->GetTotemGUID(TOTEM_SLOT_EARTH)))
                 {
                     totem->ForceValuesUpdateAtIndex(UNIT_FIELD_BYTES_2);
                     totem->ForceValuesUpdateAtIndex(UNIT_FIELD_FACTIONTEMPLATE);
                     DEBUG_LOG("-- Forced group value update for '%s' totem #%u", pp->GetName(), TOTEM_SLOT_EARTH);
                 }
-                if(Unit *totem = Unit::GetUnit(*pp, pp->GetTotemGUID(TOTEM_SLOT_WATER)))
+				if(Unit *totem = ObjectAccessor::GetUnit(*pp, pp->GetTotemGUID(TOTEM_SLOT_WATER)))
                 {
                     totem->ForceValuesUpdateAtIndex(UNIT_FIELD_BYTES_2);
                     totem->ForceValuesUpdateAtIndex(UNIT_FIELD_FACTIONTEMPLATE);
                     DEBUG_LOG("-- Forced group value update for '%s' totem #%u", pp->GetName(), TOTEM_SLOT_WATER);
                 }
-                if(Unit *totem = Unit::GetUnit(*pp, pp->GetTotemGUID(TOTEM_SLOT_AIR)))
+				if(Unit *totem = ObjectAccessor::GetUnit(*pp, pp->GetTotemGUID(TOTEM_SLOT_AIR)))
                 {
                     totem->ForceValuesUpdateAtIndex(UNIT_FIELD_BYTES_2);
                     totem->ForceValuesUpdateAtIndex(UNIT_FIELD_FACTIONTEMPLATE);

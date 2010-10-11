@@ -481,8 +481,7 @@ uint32 AuctionHouseMgr::GetAuctionHouseTeam(AuctionHouseEntry const* house)
 
 AuctionHouseEntry const* AuctionHouseMgr::GetAuctionHouseEntry(Unit* unit)
 {
-    // Change by AHBot
-    uint32 houseid = 7;                            // goblin auction house
+    uint32 houseid = 1;                                     // dwarf auction house (used for normal cut/etc percents)
 
     if(!sWorld.getConfig(CONFIG_BOOL_ALLOW_TWO_SIDE_INTERACTION_AUCTION))
     {
@@ -543,7 +542,7 @@ AuctionHouseEntry const* AuctionHouseMgr::GetAuctionHouseEntry(Unit* unit)
 AuctionHouseEntry const* AuctionHouseMgr::GetAuctionHouseEntryByFaction(uint32 factionTemplateId)
 {
     // Change by AHBot
-    uint32 houseid = 7;                            // goblin auction house
+    uint32 houseid = 7;                                 // goblin auction house
 
     if(!sWorld.getConfig(CONFIG_BOOL_ALLOW_TWO_SIDE_INTERACTION_AUCTION))
     {
