@@ -1361,12 +1361,13 @@ void World::SetInitialWorldSettings()
     // Delete all characters which have been deleted X days before
     Player::DeleteOldCharacters();
 
-	sLog.outString("Initialize AuctionHouseBot...");
+	sLog.outString("[Auction House Bot] loaded successfully...");
 	auctionbot.Initialize();
 
-    sLog.outString( "WORLD: World initialized" );
+	sLog.outString("[Auto Announcer] loaded successfully..." );
 
-	sLog.outString("Auto Announcer Loaded..." );
+    sLog.outString( "WORLD: World Server Started..." );
+
     uint32 uStartInterval = getMSTimeDiff(uStartTime, getMSTime());
     sLog.outString( "SERVER STARTUP TIME: %i minutes %i seconds", uStartInterval / 60000, (uStartInterval % 60000) / 1000 );
 }
