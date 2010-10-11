@@ -62,7 +62,7 @@ enum AchievementCriteriaRequirementType
     ACHIEVEMENT_CRITERIA_REQUIRE_HOLIDAY             = 16,  // holiday_id     0             event in holiday time
     ACHIEVEMENT_CRITERIA_REQUIRE_BG_LOSS_TEAM_SCORE  = 17,  // min_score      max_score     player's team win bg and opposition team have team score in range
     ACHIEVEMENT_CRITERIA_REQUIRE_INSTANCE_SCRIPT     = 18,  // 0              0             maker instance script call for check current criteria requirements fit
-    ACHIEVEMENT_CRITERIA_REQUIRE_S_EQUIPED_ITEM_LVL  = 19,  // item_level     item_quality  fir equipped item in slot `misc1` to item level and quality
+    ACHIEVEMENT_CRITERIA_REQUIRE_S_EQUIPPED_ITEM_LVL = 19,  // item_level     item_quality  fir equipped item in slot `misc1` to item level and quality
 };
 
 #define MAX_ACHIEVEMENT_CRITERIA_REQUIREMENT_TYPE      20   // maximum value in AchievementCriteriaRequirementType enum
@@ -157,7 +157,7 @@ struct AchievementCriteriaRequirement
             uint32 max_score;
         } bg_loss_team_score;
         // ACHIEVEMENT_CRITERIA_REQUIRE_INSTANCE_SCRIPT   = 18 (no data)
-        // ACHIEVEMENT_CRITERIA_REQUIRE_S_EQUIPED_ITEM    = 19
+        // ACHIEVEMENT_CRITERIA_REQUIRE_S_EQUIPPED_ITEM_LVL=19
         struct
         {
             uint32 item_level;
@@ -212,7 +212,8 @@ struct AchievementReward
     std::string text;
 };
 
-typedef std::multimap<uint32,AchievementReward> AchievementRewards;
+typedef std::multimap<uint32, AchievementReward> AchievementRewardsMap;
+typedef std::pair<AchievementRewardsMap::const_iterator, AchievementRewardsMap::const_iterator> AchievementRewardsMapBounds;
 
 struct AchievementRewardLocale
 {
@@ -221,8 +222,8 @@ struct AchievementRewardLocale
     std::vector<std::string> text;
 };
 
-typedef std::multimap<uint32,AchievementRewardLocale> AchievementRewardLocales;
-
+typedef std::multimap<uint32, AchievementRewardLocale> AchievementRewardLocalesMap;
+typedef std::pair<AchievementRewardLocalesMap::const_iterator, AchievementRewardLocalesMap::const_iterator> AchievementRewardLocalesMapBounds;
 
 struct CompletedAchievementData
 {
@@ -311,9 +312,8 @@ class AchievementGlobalMgr
 
         AchievementReward const* GetAchievementReward(AchievementEntry const* achievement, uint8 gender) const
         {
-            AchievementRewards::const_iterator iter_low = m_achievementRewards.lower_bound(achievement->ID);
-            AchievementRewards::const_iterator iter_up  = m_achievementRewards.upper_bound(achievement->ID);
-            for (AchievementRewards::const_iterator iter = iter_low; iter != iter_up; ++iter)
+            AchievementRewardsMapBounds bounds = m_achievementRewards.equal_range(achievement->ID);
+            for (AchievementRewardsMap::const_iterator iter = bounds.first; iter != bounds.second; ++iter)
                 if(iter->second.gender == GENDER_NONE || uint8(iter->second.gender) == gender)
                     return &iter->second;
 
@@ -322,9 +322,8 @@ class AchievementGlobalMgr
 
         AchievementRewardLocale const* GetAchievementRewardLocale(AchievementEntry const* achievement, uint8 gender) const
         {
-            AchievementRewardLocales::const_iterator iter_low = m_achievementRewardLocales.lower_bound(achievement->ID);
-            AchievementRewardLocales::const_iterator iter_up  = m_achievementRewardLocales.upper_bound(achievement->ID);
-            for (AchievementRewardLocales::const_iterator iter = iter_low; iter != iter_up; ++iter)
+            AchievementRewardLocalesMapBounds bounds = m_achievementRewardLocales.equal_range(achievement->ID);
+            for (AchievementRewardLocalesMap::const_iterator iter = bounds.first; iter != bounds.second; ++iter)
                 if(iter->second.gender == GENDER_NONE || uint8(iter->second.gender) == gender)
                     return &iter->second;
 
@@ -366,8 +365,8 @@ class AchievementGlobalMgr
         typedef std::set<uint32> AllCompletedAchievements;
         AllCompletedAchievements m_allCompletedAchievements;
 
-        AchievementRewards m_achievementRewards;
-        AchievementRewardLocales m_achievementRewardLocales;
+        AchievementRewardsMap       m_achievementRewards;
+        AchievementRewardLocalesMap m_achievementRewardLocales;
 };
 
 #define sAchievementMgr MaNGOS::Singleton<AchievementGlobalMgr>::Instance()

@@ -93,7 +93,7 @@ enum ItemBondingType
 {
     NO_BIND                                     = 0,
     BIND_WHEN_PICKED_UP                         = 1,
-    BIND_WHEN_EQUIPED                           = 2,
+    BIND_WHEN_EQUIPPED                          = 2,
     BIND_WHEN_USE                               = 3,
     BIND_QUEST_ITEM                             = 4,
     BIND_QUEST_ITEM1                            = 5         // not used in game
@@ -660,16 +660,17 @@ struct ItemPrototype
     }
 };
 
-struct ItemLocale
-{
-    std::vector<std::string> Name;
-    std::vector<std::string> Description;
-};
-
 // GCC have alternative #pragma pack() syntax and old gcc version not support pack(pop), also any gcc version not support it at some platform
 #if defined( __GNUC__ )
 #pragma pack()
 #else
 #pragma pack(pop)
 #endif
+
+struct ItemLocale
+{
+    std::vector<std::string> Name;
+    std::vector<std::string> Description;
+};
+
 #endif

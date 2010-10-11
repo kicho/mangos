@@ -244,10 +244,10 @@ bool AchievementCriteriaRequirement::IsValid(AchievementCriteriaEntry const* cri
                 return false;
             }
             return true;
-        case ACHIEVEMENT_CRITERIA_REQUIRE_S_EQUIPED_ITEM_LVL:
+        case ACHIEVEMENT_CRITERIA_REQUIRE_S_EQUIPPED_ITEM_LVL:
             if(equipped_item.item_quality >= MAX_ITEM_QUALITY)
             {
-                sLog.outErrorDb( "Table `achievement_criteria_requirement` (Entry: %u Type: %u) for requirement ACHIEVEMENT_CRITERIA_REQUIRE_S_EQUIPED_ITEM (%u) have unknown quality state in value1 (%u), ignore.",
+                sLog.outErrorDb( "Table `achievement_criteria_requirement` (Entry: %u Type: %u) for requirement ACHIEVEMENT_CRITERIA_REQUIRE_S_EQUIPPED_ITEM_LVL (%u) have unknown quality state in value1 (%u), ignore.",
                     criteria->ID, criteria->requiredType,requirementType,equipped_item.item_quality);
                 return false;
             }
@@ -350,7 +350,7 @@ bool AchievementCriteriaRequirement::Meets(uint32 criteria_id, Player const* sou
             }
             return data->CheckAchievementCriteriaMeet(criteria_id, source, target, miscvalue1);
         }
-        case ACHIEVEMENT_CRITERIA_REQUIRE_S_EQUIPED_ITEM_LVL:
+        case ACHIEVEMENT_CRITERIA_REQUIRE_S_EQUIPPED_ITEM_LVL:
         {
             Item* item = source->GetItemByPos(INVENTORY_SLOT_BAG_0,miscvalue1);
             if (!item)
@@ -2164,7 +2164,7 @@ void AchievementGlobalMgr::LoadAchievementCriteriaList()
         if(!criteria)
             continue;
 
-        ASSERT(criteria->requiredType < ACHIEVEMENT_CRITERIA_TYPE_TOTAL && "Not updated ACHIEVEMENT_CRITERIA_TYPE_TOTAL?");
+        MANGOS_ASSERT(criteria->requiredType < ACHIEVEMENT_CRITERIA_TYPE_TOTAL && "Not updated ACHIEVEMENT_CRITERIA_TYPE_TOTAL?");
 
         m_AchievementCriteriasByType[criteria->requiredType].push_back(criteria);
         m_AchievementCriteriaListByAchievement[criteria->referredAchievement].push_back(criteria);
@@ -2421,9 +2421,8 @@ void AchievementGlobalMgr::LoadRewards()
         // GENDER_NONE must be single (so or already in and none must be attempt added new data or just adding and none in)
         // other duplicate cases prevented by DB primary key
         bool dup = false;
-        AchievementRewards::const_iterator iter_low = m_achievementRewards.lower_bound(entry);
-        AchievementRewards::const_iterator iter_up  = m_achievementRewards.upper_bound(entry);
-        for (AchievementRewards::const_iterator iter = iter_low; iter != iter_up; ++iter)
+        AchievementRewardsMapBounds bounds = m_achievementRewards.equal_range(entry);
+        for (AchievementRewardsMap::const_iterator iter = bounds.first; iter != bounds.second; ++iter)
         {
             if (iter->second.gender == GENDER_NONE || reward.gender == GENDER_NONE)
             {
@@ -2495,7 +2494,7 @@ void AchievementGlobalMgr::LoadRewards()
             }
         }
 
-        m_achievementRewards.insert(AchievementRewards::value_type(entry,reward));
+        m_achievementRewards.insert(AchievementRewardsMap::value_type(entry, reward));
         ++count;
 
     } while (result->NextRow());
@@ -2548,9 +2547,8 @@ void AchievementGlobalMgr::LoadRewardLocales()
         // GENDER_NONE must be single (so or already in and none must be attempt added new data or just adding and none in)
         // other duplicate cases prevented by DB primary key
         bool dup = false;
-        AchievementRewardLocales::const_iterator iter_low = m_achievementRewardLocales.lower_bound(entry);
-        AchievementRewardLocales::const_iterator iter_up  = m_achievementRewardLocales.upper_bound(entry);
-        for (AchievementRewardLocales::const_iterator iter = iter_low; iter != iter_up; ++iter)
+        AchievementRewardLocalesMapBounds bounds = m_achievementRewardLocales.equal_range(entry);
+        for (AchievementRewardLocalesMap::const_iterator iter = bounds.first; iter != bounds.second; ++iter)
         {
             if (iter->second.gender == GENDER_NONE || data.gender == GENDER_NONE)
             {
@@ -2590,7 +2588,7 @@ void AchievementGlobalMgr::LoadRewardLocales()
             }
         }
 
-        m_achievementRewardLocales.insert(AchievementRewardLocales::value_type(entry,data));
+        m_achievementRewardLocales.insert(AchievementRewardLocalesMap::value_type(entry, data));
 
     } while (result->NextRow());
 

@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "Common.h"
+#include "Chat.h"
 #include "Language.h"
 #include "Database/DatabaseEnv.h"
 #include "WorldPacket.h"
@@ -28,7 +28,6 @@
 #include "ObjectGuid.h"
 #include "Player.h"
 #include "UpdateMask.h"
-#include "Chat.h"
 #include "GridNotifiersImpl.h"
 #include "CellImpl.h"
 #include "AccountMgr.h"
@@ -782,6 +781,12 @@ ChatCommand * ChatHandler::getCommandTable()
     return commandTable;
 }
 
+ChatHandler::ChatHandler(WorldSession* session) : m_session(session) {}
+
+ChatHandler::ChatHandler(Player* player) : m_session(player->GetSession()) {}
+
+ChatHandler::~ChatHandler() {}
+
 const char *ChatHandler::GetMangosString(int32 entry) const
 {
     return m_session->GetMangosString(entry);
@@ -801,6 +806,11 @@ bool ChatHandler::isAvailable(ChatCommand const& cmd) const
 {
     // check security level only for simple  command (without child commands)
     return GetAccessLevel() >= (AccountTypes)cmd.SecurityLevel;
+}
+
+std::string ChatHandler::GetNameLink() const
+{
+    return GetNameLink(m_session->GetPlayer());
 }
 
 bool ChatHandler::HasLowerSecurity(Player* target, uint64 guid, bool strong)
@@ -1251,8 +1261,8 @@ bool ChatHandler::SetDataForCommandInTable(ChatCommand *commandTable, const char
 
 bool ChatHandler::ParseCommands(const char* text)
 {
-    ASSERT(text);
-    ASSERT(*text);
+    MANGOS_ASSERT(text);
+    MANGOS_ASSERT(*text);
 
     //if(m_session->GetSecurity() == SEC_PLAYER)
     //    return false;
@@ -1991,7 +2001,7 @@ void ChatHandler::FillMessageData( WorldPacket *data, WorldSession* session, uin
 
     if (type == CHAT_MSG_CHANNEL)
     {
-        ASSERT(channelName);
+        MANGOS_ASSERT(channelName);
         *data << channelName;
     }
 
@@ -2699,7 +2709,7 @@ GameObject* ChatHandler::GetObjectGlobalyWithGuidOrNearWithDbGuid(uint32 lowguid
     if(!obj && sObjectMgr.GetGOData(lowguid))                   // guid is DB guid of object
     {
         MaNGOS::GameObjectWithDbGUIDCheck go_check(*pl,lowguid);
-        MaNGOS::GameObjectSearcher<MaNGOS::GameObjectWithDbGUIDCheck> checker(pl,obj,go_check);
+        MaNGOS::GameObjectSearcher<MaNGOS::GameObjectWithDbGUIDCheck> checker(obj,go_check);
         Cell::VisitGridObjects(pl,checker, pl->GetMap()->GetVisibilityDistance());
     }
 
@@ -2757,9 +2767,12 @@ uint32 ChatHandler::ExtractSpellIdFromLink(char** text)
             if(!talentEntry)
                 return 0;
 
-            uint32 rank;
-            if (!ExtractUInt32(&param1_str, rank))
+            int32 rank;
+            if (!ExtractInt32(&param1_str, rank))
                 return 0;
+
+            if (rank < 0)                                   // unlearned talent have in shift-link field -1 as rank
+                rank = 0;
 
             return rank < MAX_TALENT_RANK ? talentEntry->RankID[rank] : 0;
         }
@@ -3253,6 +3266,11 @@ uint32 ChatHandler::ExtractAccountId(char** args, std::string* accountName /*= N
         *targetIfNullArg = NULL;
 
     return account_id;
+}
+
+std::string ChatHandler::GetNameLink(Player* chr) const
+{
+    return playerLink(chr->GetName());
 }
 
 bool ChatHandler::needReportToTarget(Player* chr) const

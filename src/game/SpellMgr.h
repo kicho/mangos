@@ -22,6 +22,7 @@
 // For static or at-server-startup loaded spell data
 // For more high level function for sSpellStore data
 
+#include "Common.h"
 #include "SharedDefines.h"
 #include "SpellAuraDefines.h"
 #include "DBCStructure.h"
@@ -548,8 +549,8 @@ enum ProcFlags
     PROC_FLAG_SUCCESSFUL_NEGATIVE_SPELL_HIT = 0x00010000,   // 16 Successful negative spell cast (by default only on damage)
     PROC_FLAG_TAKEN_NEGATIVE_SPELL_HIT      = 0x00020000,   // 17 Taken negative spell (by default only on damage)
 
-    PROC_FLAG_ON_DO_PERIODIC                = 0x00040000,   // 18 Successful do periodic (damage / healing, determined from 14-17 flags)
-    PROC_FLAG_ON_TAKE_PERIODIC              = 0x00080000,   // 19 Taken spell periodic (damage / healing, determined from 14-17 flags)
+    PROC_FLAG_ON_DO_PERIODIC                = 0x00040000,   // 18 Successful do periodic (damage / healing, determined by PROC_EX_PERIODIC_POSITIVE or negative if no procEx)
+    PROC_FLAG_ON_TAKE_PERIODIC              = 0x00080000,   // 19 Taken spell periodic (damage / healing, determined by PROC_EX_PERIODIC_POSITIVE or negative if no procEx)
 
     PROC_FLAG_TAKEN_ANY_DAMAGE              = 0x00100000,   // 20 Taken any damage
     PROC_FLAG_ON_TRAP_ACTIVATION            = 0x00200000,   // 21 On trap activation
@@ -593,7 +594,8 @@ enum ProcFlagsEx
     PROC_EX_RESERVED2           = 0x0004000,
     PROC_EX_RESERVED3           = 0x0008000,
     PROC_EX_EX_TRIGGER_ALWAYS   = 0x0010000,                // If set trigger always ( no matter another flags) used for drop charges
-    PROC_EX_EX_ONE_TIME_TRIGGER = 0x0020000                 // If set trigger always but only one time (not used)
+    PROC_EX_EX_ONE_TIME_TRIGGER = 0x0020000,                // If set trigger always but only one time (not used)
+    PROC_EX_PERIODIC_POSITIVE   = 0x0040000                 // For periodic heal
 };
 
 struct SpellProcEventEntry
@@ -994,7 +996,7 @@ class SpellMgr
 
         SpellLearnSpellMapBounds GetSpellLearnSpellMapBounds(uint32 spell_id) const
         {
-            return SpellLearnSpellMapBounds(mSpellLearnSpells.lower_bound(spell_id),mSpellLearnSpells.upper_bound(spell_id));
+            return mSpellLearnSpells.equal_range(spell_id);
         }
 
         bool IsSpellLearnToSpell(uint32 spell_id1,uint32 spell_id2) const
@@ -1017,7 +1019,7 @@ class SpellMgr
         // Spell script targets
         SpellScriptTargetBounds GetSpellScriptTargetBounds(uint32 spell_id) const
         {
-            return SpellScriptTargetBounds(mSpellScriptTarget.lower_bound(spell_id),mSpellScriptTarget.upper_bound(spell_id));
+            return mSpellScriptTarget.equal_range(spell_id);
         }
 
         // Spell correctess for client using
@@ -1025,7 +1027,7 @@ class SpellMgr
 
         SkillLineAbilityMapBounds GetSkillLineAbilityMapBounds(uint32 spell_id) const
         {
-            return SkillLineAbilityMapBounds(mSkillLineAbilityMap.lower_bound(spell_id),mSkillLineAbilityMap.upper_bound(spell_id));
+            return mSkillLineAbilityMap.equal_range(spell_id);
         }
 
         PetAura const* GetPetAura(uint32 spell_id, SpellEffectIndex eff)
@@ -1059,30 +1061,30 @@ class SpellMgr
 
         SpellAreaMapBounds GetSpellAreaMapBounds(uint32 spell_id) const
         {
-            return SpellAreaMapBounds(mSpellAreaMap.lower_bound(spell_id),mSpellAreaMap.upper_bound(spell_id));
+            return mSpellAreaMap.equal_range(spell_id);
         }
 
         SpellAreaForQuestMapBounds GetSpellAreaForQuestMapBounds(uint32 quest_id, bool active) const
         {
-            if(active)
-                return SpellAreaForQuestMapBounds(mSpellAreaForActiveQuestMap.lower_bound(quest_id),mSpellAreaForActiveQuestMap.upper_bound(quest_id));
+            if (active)
+                return mSpellAreaForActiveQuestMap.equal_range(quest_id);
             else
-                return SpellAreaForQuestMapBounds(mSpellAreaForQuestMap.lower_bound(quest_id),mSpellAreaForQuestMap.upper_bound(quest_id));
+                return mSpellAreaForQuestMap.equal_range(quest_id);
         }
 
         SpellAreaForQuestMapBounds GetSpellAreaForQuestEndMapBounds(uint32 quest_id) const
         {
-            return SpellAreaForQuestMapBounds(mSpellAreaForQuestEndMap.lower_bound(quest_id),mSpellAreaForQuestEndMap.upper_bound(quest_id));
+            return mSpellAreaForQuestEndMap.equal_range(quest_id);
         }
 
         SpellAreaForAuraMapBounds GetSpellAreaForAuraMapBounds(uint32 spell_id) const
         {
-            return SpellAreaForAuraMapBounds(mSpellAreaForAuraMap.lower_bound(spell_id),mSpellAreaForAuraMap.upper_bound(spell_id));
+            return mSpellAreaForAuraMap.equal_range(spell_id);
         }
 
         SpellAreaForAreaMapBounds GetSpellAreaForAreaMapBounds(uint32 area_id) const
         {
-            return SpellAreaForAreaMapBounds(mSpellAreaForAreaMap.lower_bound(area_id),mSpellAreaForAreaMap.upper_bound(area_id));
+            return mSpellAreaForAreaMap.equal_range(area_id);
         }
 
     // Modifiers

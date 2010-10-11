@@ -904,8 +904,8 @@ enum MangosStrings
     // Room for old clients 2.x           1300-1399 not used
     // Room for old clients 1.x           1400-1499 not used
 
-    // FREE IDS                           1500-9999
-	LANG_AUTO_BROADCAST = 1300,
+	LANG_AUTO_BROADCAST                 = 1500,
+	// FREE IDS                           1501-9999
 
     // Use for not-in-offcial-sources patches
     //                                    10000-10999
