@@ -614,7 +614,7 @@ void Item::SetItemRandomProperties(int32 randomPropId)
     }
 }
 
-// Added by AHBot
+// AHBot
 // Like SetItemRandomProperties() but no call of SetState() because there is no owner of the item
 void Item::SetItemRandomPropertiesNoUpdate(int32 randomPropId)
 {
@@ -860,7 +860,7 @@ void Item::SetEnchantment(EnchantmentSlot slot, uint32 id, uint32 duration, uint
     SetState(ITEM_CHANGED);
 }
 
-// Added by AHBot
+// AHBot
 // Like SetEnchantment() but no call of SetState() because there is no owner of the item
 void Item::SetEnchantmentNoUpdate(EnchantmentSlot slot, uint32 id, uint32 duration, uint32 charges)
 {

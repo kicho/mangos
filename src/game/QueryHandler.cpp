@@ -126,7 +126,7 @@ void WorldSession::SendNameQueryOpcodeFromDBCallBack(QueryResult *result, uint32
     delete result;
 }
 
-// Added By AHBot
+// AHBot
 // Fake name for AHBot Guid
 void WorldSession::SendFakeNameForAHBotQueryOPcode()
 {
