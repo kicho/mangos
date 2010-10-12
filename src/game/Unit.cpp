@@ -6622,6 +6622,10 @@ bool Unit::IsSpellCrit(Unit *pVictim, SpellEntry const *spellProto, SpellSchoolM
     if((spellProto->AttributesEx2 & SPELL_ATTR_EX2_CANT_CRIT))
         return false;
 
+	// npc's can't crit with spells
+	if (GetObjectGuid().IsCreature())
+		return false;
+
     float crit_chance = 0.0f;
     switch(spellProto->DmgClass)
     {

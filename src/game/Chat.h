@@ -514,8 +514,8 @@ class ChatHandler
         bool HandleGonameCommand(char* args);
         bool HandleGroupgoCommand(char* args);
         bool HandleRecallCommand(char* args);
-        bool HandleAnnounceCommand(char* args);
-		bool HandleSystemCommand(char* args);
+        bool HandleNameAnnounceCommand(char* args);
+		bool HandleAnnounceCommand(char* args);
         bool HandleNotifyCommand(char* args);
         bool HandleGPSCommand(char* args);
         bool HandleTaxiCheatCommand(char* args);

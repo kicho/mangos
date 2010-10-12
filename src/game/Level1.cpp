@@ -120,8 +120,8 @@ bool ChatHandler::HandleNpcWhisperCommand(char* args)
 }
 //----------------------------------------------------------
 
-// Administrator System Message .system
-bool ChatHandler::HandleSystemCommand(char* args)
+// Administrator System Message .announce
+bool ChatHandler::HandleAnnounceCommand(char* args)
 {
     if(!*args)
         return false;
@@ -130,8 +130,8 @@ bool ChatHandler::HandleSystemCommand(char* args)
     return true;
 }
 
-// Moderator .announce Command with colored name and GM rank
-bool ChatHandler::HandleAnnounceCommand(char* args)
+// Moderator .nameannounce command with colored name and GM rank
+bool ChatHandler::HandleNameAnnounceCommand(char* args)
 {
 	int32 strid = 0;
 
@@ -1226,7 +1226,7 @@ bool ChatHandler::HandleModifyScaleCommand(char* args)
         return false;
 
     float Scale = (float)atof(args);
-    if (Scale > 10.0f || Scale <= 0.0f)
+    if (Scale > 15.0f || Scale <= 0.0f)
     {
         SendSysMessage(LANG_BAD_VALUE);
         SetSentErrorMessage(true);
