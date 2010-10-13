@@ -1827,6 +1827,9 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                 // Judgement of Light
                 case 20185:
                 {
+					if (pVictim == this)
+						return SPELL_AURA_PROC_FAILED;
+
                     basepoints[0] = int32( pVictim->GetMaxHealth() * triggeredByAura->GetModifier()->m_amount / 100 );
                     pVictim->CastCustomSpell(pVictim, 20267, &basepoints[0], NULL, NULL, true, NULL, triggeredByAura);
                     return SPELL_AURA_PROC_OK;
@@ -1991,6 +1994,9 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                     Unit* beacon = triggeredByAura->GetCaster();
                     if (!beacon)
                         return SPELL_AURA_PROC_FAILED;
+
+					if (procSpell->Id == 20267)
+						return SPELL_AURA_PROC_FAILED;
 
                     // find caster main aura at beacon
                     Aura* dummy = NULL;
@@ -2543,8 +2549,8 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
             if (dummySpell->Id == 49005)
             {
                 // TODO: need more info (cooldowns/PPM)
-                triggered_spell_id = 61607;
-                break;
+                target->CastSpell(target, 61607, true, NULL, triggeredByAura);
+				return SPELL_AURA_PROC_OK;
             }
 			// Unholy Blight
             if (dummySpell->Id == 49194)
