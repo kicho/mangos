@@ -315,7 +315,14 @@ void WorldSession::SendPetNameQuery( uint64 petguid, uint32 petnumber)
 {
     Creature* pet = _player->GetMap()->GetAnyTypeCreature(petguid);
     if(!pet || !pet->GetCharmInfo() || pet->GetCharmInfo()->GetPetNumber() != petnumber)
-        return;
+	{
+		WorldPacket data(SMSG_PET_NAME_QUERY_RESPONSE, (4+1));
+		data << uint32(petnumber);
+		data << uint8(0);
+		_player->GetSession()->SendPacket(&data);
+		return;
+	}
+
 
     std::string name = pet->GetName();
 
