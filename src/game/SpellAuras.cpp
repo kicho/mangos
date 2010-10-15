@@ -9327,7 +9327,7 @@ void Aura::HandleAuraInitializeImages(bool Apply, bool Real)
         creator = caster;
 
     Creature* pImmage = (Creature*)target;
-    if (creator != caster || pImmage->isPet())
+    if (creator != caster || pImmage->IsPet())
         return;
 
     // set stats and visual

@@ -676,7 +676,7 @@ void Object::BuildValuesUpdate(uint8 updatetype, ByteBuffer * data, UpdateMask *
                         bool forcefriendly = false; // bool for pets/totems to offload more code from the big if below
                         if(GetTypeId() == TYPEID_UNIT)
                         {
-                            if(((Creature*)this)->isTotem() || ((Creature*)this)->isPet())
+                            if(((Creature*)this)->IsTotem() || ((Creature*)this)->IsPet())
                             {
                                 Unit* P_Owner = ((Creature*)this)->GetOwner();
                                 if(P_Owner && P_Owner->GetTypeId() == TYPEID_PLAYER && P_Owner->IsFriendlyTo(target)

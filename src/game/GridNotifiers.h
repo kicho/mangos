@@ -558,7 +558,7 @@ namespace MaNGOS
             {
                 //if (i_fobj->isHonorOrXPTarget(u) ||
 				if (i_fobj->GetTypeId() != TYPEID_PLAYER || !((Player*)i_fobj)->isHonorOrXPTarget(u) ||
-                    u->getDeathState() != CORPSE || u->isDeadByDefault() || u->IsTaxiFlying() ||
+                    u->getDeathState() != CORPSE || u->IsDeadByDefault() || u->IsTaxiFlying() ||
                     ( u->GetCreatureTypeMask() & (1 << (CREATURE_TYPE_HUMANOID-1)) )==0 ||
                     (u->GetDisplayId() != u->GetNativeDisplayId()))
                     return false;
