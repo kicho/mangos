@@ -2599,7 +2599,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     return;
 
                 if (apply && target)
-                    ((Player*)caster)->SetSelection(target->GetGUID());
+                    ((Player*)caster)->SetSelectionGuid(target->GetGUID());
                 return;
             }
             // Pain and Suffering
