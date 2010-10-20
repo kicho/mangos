@@ -150,7 +150,6 @@ namespace MaNGOS
         Player &i_player;
         PlayerRelocationNotifier(Player &pl) : i_player(pl) {}
         template<class T> void Visit(GridRefManager<T> &) {}
-        void Visit(PlayerMapType &);
         void Visit(CreatureMapType &);
     };
 
@@ -633,8 +632,8 @@ namespace MaNGOS
     {
         public:
             RespawnDo() {}
-            void operator()(Creature* u) const { u->Respawn(); }
-            void operator()(GameObject* u) const { u->Respawn(); }
+            void operator()(Creature* u) const;
+            void operator()(GameObject* u) const;
             void operator()(WorldObject*) const {}
             void operator()(Corpse*) const {}
     };
@@ -1175,7 +1174,6 @@ namespace MaNGOS
 
     #ifndef WIN32
     template<> void PlayerRelocationNotifier::Visit<Creature>(CreatureMapType &);
-    template<> void PlayerRelocationNotifier::Visit<Player>(PlayerMapType &);
     template<> void CreatureRelocationNotifier::Visit<Player>(PlayerMapType &);
     template<> void CreatureRelocationNotifier::Visit<Creature>(CreatureMapType &);
     template<> inline void DynamicObjectUpdater::Visit<Creature>(CreatureMapType &);
