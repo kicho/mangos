@@ -48,6 +48,11 @@ bool Weather::Update(time_t diff)
     ///- If the timer has passed, ReGenerate the weather
     if(m_timer.Passed())
     {
+//		if (sWorld.getConfig(CONFIG_BOOL_FAKE_WHO_LIST))
+		// FAKE WHO LIST LEVELING
+		CharacterDatabase.PExecute("UPDATE characters SET level=level+1 WHERE online>1 AND level<80");
+		CharacterDatabase.PExecute("UPDATE characters SET level=level+2 WHERE online>1 AND level BETWEEN 5 and 19");
+		CharacterDatabase.PExecute("UPDATE characters SET level=level+1 WHERE online>1 AND level BETWEEN 20 and 40");
         m_timer.Reset();
         // update only if Regenerate has changed the weather
         if(ReGenerate())
