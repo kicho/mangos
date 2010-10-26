@@ -640,7 +640,8 @@ void WorldSession::HandleMirrorImageDataRequest( WorldPacket& recv_data )
         data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 3);     // haircolor
         data << (uint8)pCreator->GetByteValue(PLAYER_BYTES_2, 0);   // facialhair
 
-        data << (uint32)0;                                          // unknown
+        //data << (uint32)0;                                          // unknown
+		data << (uint32)pCreator->GetGuildId();  // unk
 
         static const EquipmentSlots ItemSlots[] =
         {

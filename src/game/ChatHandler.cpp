@@ -208,22 +208,19 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
             uint32 tSecurity = GetSecurity();
             uint32 pSecurity = player ? player->GetSession()->GetSecurity() : SEC_PLAYER;
             if (!player || (tSecurity == SEC_PLAYER && pSecurity > SEC_PLAYER && !player->isAcceptWhispers()))
-            {
-                if (sWorld.getConfig(CONFIG_BOOL_FAKE_WHO_LIST))
+             {
+				// If Fake WHO List system on then show player DND
+				if (sWorld.getConfig(CONFIG_BOOL_FAKE_WHO_LIST))
 				{
-					QueryResult *result = CharacterDatabase.PQuery("SELECT guid FROM characters WHERE name = '%s' AND online != 0", to.c_str());
-				if (!result)
-					SendPlayerNotFoundNotice(to);
+					sWorld.SendWorldText(LANG_NOT_WHISPER);
 					return;
-
-					delete result;
 				}
 				else
 				{
-					SendPlayerNotFoundNotice(to);
-					return;
+                 SendPlayerNotFoundNotice(to);
+                 return;
 				}
-            }
+             }
 
             if (!sWorld.getConfig(CONFIG_BOOL_ALLOW_TWO_SIDE_INTERACTION_CHAT) && tSecurity == SEC_PLAYER && pSecurity == SEC_PLAYER )
             {

@@ -9313,7 +9313,7 @@ void Aura::HandleAuraInitializeImages(bool Apply, bool Real)
 {
 	Unit* target = GetTarget();
 
-    if (!Real || !Apply || !target || target->GetTypeId() != TYPEID_UNIT)
+    if (!Real || !Apply || !target/* || target->GetTypeId() != TYPEID_UNIT*/)
         return;
 
     Unit* caster = GetCaster();
@@ -9325,8 +9325,8 @@ void Aura::HandleAuraInitializeImages(bool Apply, bool Real)
         creator = caster;
 
     Creature* pImmage = (Creature*)target;
-    if (creator != caster || pImmage->IsPet())
-        return;
+    /*if (creator != caster || pImmage->IsPet())
+        return;*/
 
     // set stats and visual
     pImmage->SetDisplayId(creator->GetDisplayId());
