@@ -5847,7 +5847,7 @@ SpellCastResult Spell::CheckItems()
         if(!proto)
             return SPELL_FAILED_ITEM_NOT_FOUND;
 
-		if(proto->Flags & ITEM_FLAGS_ENCHANT_SCROLL)
+		if(proto->Flags & ITEM_FLAG_ENCHANT_SCROLL)
 			isScrollItem = true;
 
         for (int i = 0; i < 5; ++i)
