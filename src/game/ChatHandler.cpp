@@ -208,19 +208,58 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
             uint32 tSecurity = GetSecurity();
             uint32 pSecurity = player ? player->GetSession()->GetSecurity() : SEC_PLAYER;
             if (!player || (tSecurity == SEC_PLAYER && pSecurity > SEC_PLAYER && !player->isAcceptWhispers()))
-             {
-				// If Fake WHO List system on then show player DND
-				if (sWorld.getConfig(CONFIG_BOOL_FAKE_WHO_LIST))
+            /*{
+				//uint64 guid = 0;
+				QueryResult *result = CharacterDatabase.PQuery("SELECT * FROM characters WHERE name = '%s' AND online != 0", to.c_str());
+				Field *fields = result->Fetch();
+				if (result)
 				{
-					sWorld.SendWorldText(LANG_NOT_WHISPER);
-					return;
+					//Player *fakeplayer = sObjectMgr.GetPlayerGUIDByName(to.c_str());
+					//Player *fakeplayer = ObjectGuid(HIGHGUID_PLAYER, (*result)[0].GetUInt32()).GetRawValue();
+					//guid = ObjectGuid(HIGHGUID_PLAYER, (*result)[0].GetUInt32()).GetRawValue();
+					uint64 pguid = fields[0].GetUInt64();
+					sObjectAccessor.FindByName(to.c_str())->Whisper(msg, lang, pguid);
+					delete result;
+					//return guid;
 				}
 				else
 				{
-                 SendPlayerNotFoundNotice(to);
-                 return;
-				}
-             }
+                sWorld.SendWorldText(LANG_NOT_WHISPER);
+                return;
+				}*/
+		{
+				QueryResult *result = CharacterDatabase.PQuery("SELECT guid FROM characters WHERE name = '%s'", to.c_str());
+			if (result)
+			/*{
+				uint64 rPlayer = fields[0].GetUInt64();
+				//std::string text = msg.c_str();
+				WorldPacket data(SMSG_MESSAGECHAT, 200);
+				rPlayer->_BuildPlayerChat(&data, CHAT_MSG_WHISPER, msg, lang);
+				rPlayer->SendPacket(&data);
+			}*/
+			{
+				Field *fields = result->Fetch();
+				//uint64 pguid = fields[0].GetUInt64();
+				//ObjectGuid pguid   = ObjectGuid(HIGHGUID_PLAYER, fields[0].GetUInt32()).GetRawValue();
+				uint64 pguid   = ObjectGuid(HIGHGUID_PLAYER, fields[0].GetUInt32()).GetRawValue();
+				Player *fplayer = sObjectMgr.GetPlayer(pguid);
+			if (fplayer)
+				fplayer->Whisper(msg, lang, pguid);
+				while ( result->NextRow() );
+				delete result;
+			if (!fplayer)
+				GetPlayer()->Whisper(msg, lang, pguid);
+				while ( result->NextRow() );
+				delete result;
+
+
+			}
+			else
+			{
+				sWorld.SendWorldText(LANG_NOT_WHISPER);
+                return;
+			}
+		}
 
             if (!sWorld.getConfig(CONFIG_BOOL_ALLOW_TWO_SIDE_INTERACTION_CHAT) && tSecurity == SEC_PLAYER && pSecurity == SEC_PLAYER )
             {
