@@ -9320,7 +9320,7 @@ void Aura::HandleAuraInitializeImages(bool Apply, bool Real)
 	if (!caster)
 		return;
 
-	Unit *creator = ObjectAccessor::GetUnit(*target, target->GetCreatorGUID());
+	Unit *creator = ObjectAccessor::GetUnit(*target, target->GetCreatorGuid());
 	if (!creator)
         creator = caster;
 

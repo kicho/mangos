@@ -618,7 +618,7 @@ void WorldSession::HandleMirrorImageDataRequest( WorldPacket& recv_data )
         return;
 
     // Get creator of the unit
-    Unit *creator = ObjectAccessor::GetUnit(*_player, unit->GetCreatorGUID());
+    Unit *creator = ObjectAccessor::GetUnit(*_player, unit->GetCreatorGuid());
     if (!creator)
         creator = unit;
 
