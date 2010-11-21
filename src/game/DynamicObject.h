@@ -35,11 +35,12 @@ class DynamicObject : public WorldObject
         void RemoveFromWorld();
 
         bool Create(uint32 guidlow, Unit *caster, uint32 spellId, SpellEffectIndex effIndex, float x, float y, float z, int32 duration, float radius);
+        void Update(uint32 p_time);
         void Delete();
         uint32 GetSpellId() const { return m_spellId; }
         SpellEffectIndex GetEffIndex() const { return m_effIndex; }
         uint32 GetDuration() const { return m_aliveDuration; }
-        uint64 GetCasterGUID() const { return GetUInt64Value(DYNAMICOBJECT_CASTER); }
+        ObjectGuid const& GetCasterGuid() const { return GetGuidValue(DYNAMICOBJECT_CASTER); }
         Unit* GetCaster() const;
         float GetRadius() const { return m_radius; }
         bool IsAffecting(Unit *unit) const { return m_affected.find(unit->GetObjectGuid()) != m_affected.end(); }
@@ -57,17 +58,9 @@ class DynamicObject : public WorldObject
 
         bool isVisibleForInState(Player const* u, WorldObject const* viewPoint, bool inVisibleList) const;
 
-        void Say(int32 textId, uint32 language, uint64 TargetGuid) { MonsterSay(textId,language,TargetGuid); }
-        void Yell(int32 textId, uint32 language, uint64 TargetGuid) { MonsterYell(textId,language,TargetGuid); }
-        void TextEmote(int32 textId, uint64 TargetGuid) { MonsterTextEmote(textId,TargetGuid); }
-        void Whisper(int32 textId,uint64 receiver) { MonsterWhisper(textId,receiver); }
-        void YellToZone(int32 textId, uint32 language, uint64 TargetGuid) { MonsterYellToZone(textId,language,TargetGuid); }
-
         GridReference<DynamicObject> &GetGridRef() { return m_gridRef; }
 
     protected:
-        void Update(uint32 update_diff, uint32 tick_diff);  // overwrite WorldObject::Update
-
         uint32 m_spellId;
         SpellEffectIndex m_effIndex;
         int32 m_aliveDuration;

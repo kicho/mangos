@@ -69,6 +69,7 @@ class Unit;
 class Map;
 class UpdateMask;
 class InstanceData;
+class TerrainInfo;
 
 typedef UNORDERED_MAP<Player*, UpdateData> UpdateDataMapType;
 
@@ -344,14 +345,14 @@ class MANGOS_DLL_SPEC WorldObject : public Object
     public:
         virtual ~WorldObject ( ) {}
 
-        void UpdateCall(uint32 newtime, uint32 diff);       // tick time and tick diff in msecs, must be called instead direct call Update
+        virtual void Update ( uint32 /*time_diff*/ ) { }
 
         void _Create( uint32 guidlow, HighGuid guidhigh, uint32 phaseMask);
 
         void Relocate(float x, float y, float z, float orientation);
         void Relocate(float x, float y, float z);
 
-        void SetOrientation(float orientation) { m_orientation = orientation; }
+        void SetOrientation(float orientation);
 
         float GetPositionX( ) const { return m_positionX; }
         float GetPositionY( ) const { return m_positionY; }
@@ -445,16 +446,16 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         virtual void SendMessageToSetInRange(WorldPacket *data, float dist, bool self);
         void SendMessageToSetExcept(WorldPacket *data, Player const* skipped_receiver);
 
-        void MonsterSay(const char* text, uint32 language, uint64 TargetGuid);
-        void MonsterYell(const char* text, uint32 language, uint64 TargetGuid);
-        void MonsterTextEmote(const char* text, uint64 TargetGuid, bool IsBossEmote = false);
-        void MonsterWhisper(const char* text, uint64 receiver, bool IsBossWhisper = false);
-        void MonsterSay(int32 textId, uint32 language, uint64 TargetGuid);
-        void MonsterYell(int32 textId, uint32 language, uint64 TargetGuid);
-        void MonsterTextEmote(int32 textId, uint64 TargetGuid, bool IsBossEmote = false);
-        void MonsterWhisper(int32 textId, uint64 receiver, bool IsBossWhisper = false);
-        void MonsterYellToZone(int32 textId, uint32 language, uint64 TargetGuid);
-        void BuildMonsterChat(WorldPacket *data, uint8 msgtype, char const* text, uint32 language, char const* name, uint64 TargetGuid) const;
+        void MonsterSay(const char* text, uint32 language, Unit* target = NULL);
+        void MonsterYell(const char* text, uint32 language, Unit* target = NULL);
+        void MonsterTextEmote(const char* text, Unit* target, bool IsBossEmote = false);
+        void MonsterWhisper(const char* text, Unit* target, bool IsBossWhisper = false);
+        void MonsterSay(int32 textId, uint32 language, Unit* target = NULL);
+        void MonsterYell(int32 textId, uint32 language, Unit* target = NULL);
+        void MonsterTextEmote(int32 textId, Unit* target, bool IsBossEmote = false);
+        void MonsterWhisper(int32 textId, Unit* receiver, bool IsBossWhisper = false);
+        void MonsterYellToZone(int32 textId, uint32 language, Unit* target);
+        void BuildMonsterChat(WorldPacket *data, uint8 msgtype, char const* text, uint32 language, char const* name, ObjectGuid targetGuid, char const* targetName) const;
 
         void PlayDistanceSound(uint32 sound_id, Player* target = NULL);
         void PlayDirectSound(uint32 sound_id, Player* target = NULL);
@@ -482,8 +483,8 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         //used to check all object's GetMap() calls when object is not in world!
         void ResetMap() { m_currMap = NULL; }
 
-        //this function should be removed in nearest time...
-        Map const* GetBaseMap() const;
+        //obtain terrain data for map where this object belong...
+        TerrainInfo const* GetTerrain() const;
 
         void AddToClientUpdateList();
         void RemoveFromClientUpdateList();
@@ -494,11 +495,8 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         bool isActiveObject() const { return m_isActiveObject || m_viewPoint.hasViewers(); }
 
         ViewPoint& GetViewPoint() { return m_viewPoint; }
-
     protected:
         explicit WorldObject();
-
-        virtual void Update(uint32 /*update_diff*/, uint32 /*tick_diff*/) { }
 
         //these functions are used mostly for Relocate() and Corpse/Player specific stuff...
         //use them ONLY in LoadFromDB()/Create() funcs and nowhere else!
@@ -522,8 +520,6 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         float m_orientation;
 
         ViewPoint m_viewPoint;
-
-        uint32 m_lastUpdateTime;
 };
 
 #endif

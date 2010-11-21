@@ -513,10 +513,10 @@ void WorldSession::HandleSellItemOpcode( WorldPacket & recv_data )
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     Item *pItem = _player->GetItemByGuid( itemguid );
-    if( pItem )
+    if (pItem)
     {
         // prevent sell not owner item
-        if(_player->GetGUID() != pItem->GetOwnerGUID())
+        if (_player->GetObjectGuid() != pItem->GetOwnerGuid())
         {
             _player->SendSellError( SELL_ERR_CANT_SELL_ITEM, pCreature, itemguid, 0);
             return;
@@ -773,7 +773,9 @@ void WorldSession::SendListInventory(ObjectGuid vendorguid)
 
         if (crItem)
         {
-            if (ItemPrototype const *pProto = ObjectMgr::GetItemPrototype(crItem->item))
+            uint32 itemId = crItem->item;
+            ItemPrototype const *pProto = ObjectMgr::GetItemPrototype(itemId);
+            if (pProto)
             {
                 if (!_player->isGameMaster())
                 {
@@ -792,13 +794,25 @@ void WorldSession::SendListInventory(ObjectGuid vendorguid)
                         continue;
                 }
 
+                // possible item coverting for BoA case
+                if (pProto->Flags & ITEM_FLAG_BOA)
+                {
+                    // convert if can use and then buy
+                    if (pProto->RequiredReputationFaction && uint32(_player->GetReputationRank(pProto->RequiredReputationFaction)) >= pProto->RequiredReputationRank)
+                    {
+                        itemId = sObjectMgr.GetItemConvert(itemId, _player->getRaceMask());
+                        // checked at convert data loading as existed
+                        pProto = ObjectMgr::GetItemPrototype(itemId);
+                    }
+                }
+
                 ++count;
 
                 // reputation discount
                 uint32 price = (crItem->ExtendedCost == 0 || pProto->Flags2 & ITEM_FLAG2_EXT_COST_REQUIRES_GOLD) ? uint32(floor(pProto->BuyPrice * discountMod)) : 0;
 
                 data << uint32(vendorslot +1);              // client size expected counting from 1
-                data << uint32(crItem->item);
+                data << uint32(itemId);
                 data << uint32(pProto->DisplayInfoID);
                 data << uint32(crItem->maxcount <= 0 ? 0xFFFFFFFF : pCreature->GetVendorItemCurrentCount(crItem));
                 data << uint32(price);
@@ -1175,7 +1189,7 @@ void WorldSession::HandleWrapItemOpcode(WorldPacket& recv_data)
     }
 
     CharacterDatabase.BeginTransaction();
-    CharacterDatabase.PExecute("INSERT INTO character_gifts VALUES ('%u', '%u', '%u', '%u')", GUID_LOPART(item->GetOwnerGUID()), item->GetGUIDLow(), item->GetEntry(), item->GetUInt32Value(ITEM_FIELD_FLAGS));
+    CharacterDatabase.PExecute("INSERT INTO character_gifts VALUES ('%u', '%u', '%u', '%u')", item->GetOwnerGuid().GetCounter(), item->GetGUIDLow(), item->GetEntry(), item->GetUInt32Value(ITEM_FIELD_FLAGS));
     item->SetEntry(gift->GetEntry());
 
     switch (item->GetEntry())

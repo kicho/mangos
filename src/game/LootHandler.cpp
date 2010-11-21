@@ -49,7 +49,7 @@ void WorldSession::HandleAutostoreLootItemOpcode( WorldPacket & recv_data )
             GameObject *go = player->GetMap()->GetGameObject(lguid);
 
             // not check distance for GO in case owned GO (fishing bobber case, for example) or Fishing hole GO
-            if (!go || ((go->GetOwnerGUID() != _player->GetGUID() && go->GetGoType() != GAMEOBJECT_TYPE_FISHINGHOLE) && !go->IsWithinDistInMap(_player,INTERACTION_DISTANCE)))
+            if (!go || ((go->GetOwnerGuid() != _player->GetObjectGuid() && go->GetGoType() != GAMEOBJECT_TYPE_FISHINGHOLE) && !go->IsWithinDistInMap(_player,INTERACTION_DISTANCE)))
             {
                 player->SendLootRelease(lguid);
                 return;
@@ -192,7 +192,7 @@ void WorldSession::HandleLootMoneyOpcode( WorldPacket & /*recv_data*/ )
             GameObject *pGameObject = GetPlayer()->GetMap()->GetGameObject(guid);
 
             // not check distance for GO in case owned GO (fishing bobber case, for example)
-            if( pGameObject && (pGameObject->GetOwnerGUID()==_player->GetGUID() || pGameObject->IsWithinDistInMap(_player,INTERACTION_DISTANCE)) )
+            if( pGameObject && (pGameObject->GetOwnerGuid() == _player->GetObjectGuid() || pGameObject->IsWithinDistInMap(_player,INTERACTION_DISTANCE)) )
                 pLoot = &pGameObject->loot;
 
             break;
@@ -319,7 +319,7 @@ void WorldSession::DoLootRelease(ObjectGuid lguid)
             GameObject *go = GetPlayer()->GetMap()->GetGameObject(lguid);
 
             // not check distance for GO in case owned GO (fishing bobber case, for example) or Fishing hole GO
-            if (!go || ((go->GetOwnerGUID() != _player->GetGUID() && go->GetGoType() != GAMEOBJECT_TYPE_FISHINGHOLE) && !go->IsWithinDistInMap(_player,INTERACTION_DISTANCE)))
+            if (!go || ((go->GetOwnerGuid() != _player->GetObjectGuid() && go->GetGoType() != GAMEOBJECT_TYPE_FISHINGHOLE) && !go->IsWithinDistInMap(_player,INTERACTION_DISTANCE)))
                 return;
 
             loot = &go->loot;
@@ -416,11 +416,9 @@ void WorldSession::DoLootRelease(ObjectGuid lguid)
             if (!pItem)
                 return;
 
-            ItemPrototype const* proto = pItem->GetProto();
-
-            // destroy only 5 items from stack in case prospecting and milling
             switch (pItem->loot.loot_type)
             {
+                // temporary loot in stacking items, clear loot state, no auto loot move
                 case LOOT_MILLING:
                 case LOOT_PROSPECTING:
                 {
@@ -437,6 +435,7 @@ void WorldSession::DoLootRelease(ObjectGuid lguid)
                     player->DestroyItemCount(pItem, count, true);
                     break;
                 }
+                // temporary loot, auto loot move
                 case LOOT_DISENCHANTING:
                 {
                     if (!pItem->loot.isLooted())
@@ -446,6 +445,7 @@ void WorldSession::DoLootRelease(ObjectGuid lguid)
                     player->DestroyItem( pItem->GetBagSlot(),pItem->GetSlot(), true);
                     break;
                 }
+                // normal persistence loot
                 default:
                 {
                     // must be destroyed only if no loot 
